@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Relatórios Operacionais - Rondas e Paradas</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body class="tema-ronda">
+
+<div class="container">
+    <div class="painel-esquerdo">
+        <div class="header-topo-esquerdo">
+            <div class="header-abas">
+                <button id="aba-ronda" class="aba ativa" onclick="mudarModo('ronda')">📝 Modo Rondas</button>
+                <button id="aba-parada" class="aba" onclick="mudarModo('parada')">🛑 Modo Paradas</button>
+            </div>
+            <div class="toggle-container">
+                <label class="switch" title="Ativar Modo Noturno">
+                    <input type="checkbox" id="toggle-dark-mode" onchange="alternarModoNoturno()">
+                    <span class="slider round"></span>
+                </label>
+                <span class="icone-lua">🌙</span>
+            </div>
+        </div>
+
+        <h2 id="titulo-painel">Rondas Nos Residenciais</h2>
+        
+        <div class="form-row">
+            <div class="form-group">
+                <label>Supervisor:</label>
+                <input type="text" id="supervisor" value="Luis" placeholder="O seu nome">
+            </div>
+            <div class="form-group">
+                <label>Turno:</label>
+                <select id="turno">
+                    <option value="Noturno (18:00 às 06:00)">Noturno (18:00 às 06:00)</option>
+                    <option value="Diurno (06:00 às 18:00)">Diurno (06:00 às 18:00)</option>
+                </select>
+            </div>
+        </div>
+
+        <div class="form-group">
+            <label>Condomínio / Residencial:</label>
+            <select id="condominio">
+                <option value="">Selecione o local...</option>
+                <!-- Preenchido via JS -->
+            </select>
+        </div>
+
+        <div class="form-group">
+            <label id="label-agente">Nome do Agente (Ronda):</label>
+            <input type="text" id="agente" placeholder="Ex: Silva">
+        </div>
+
+        <div class="form-row">
+            <div class="form-group">
+                <label>Fase do Chamado:</label>
+                <select id="faseRegistro">
+                    <option value="">Selecione...</option>
+                    <option value="Início da Ronda">Início da Ronda</option>
+                    <option value="Término da Ronda">Término da Ronda</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label>Horário da Foto:</label>
+                <input type="time" id="horario">
+            </div>
+        </div>
+
+        <label>Anexe as fotografias do WhatsApp:</label>
+        
+        <div class="area-upload" id="drop-area" onclick="acionarInputFotos()">
+            <p style="margin: 0; font-size: 16px;">📁 Clique aqui ou <strong>ARRASTE AS FOTOS</strong> para dentro desta caixa</p>
+            <input type="file" id="fotos-input" accept="image/*" multiple onchange="processarImagens(this.files)">
+        </div>
+
+        <button class="btn-acao btn-pdf" onclick="gerarPDF()">Baixar Relatório em PDF</button>
+        <button class="btn-acao btn-limpar" onclick="limparFila()">🗑️ Limpar Fila Atual</button>
+        
+        <div class="status-salvamento" id="status-salvo"></div>
+    </div>
+
+    <div class="painel-direito">
+        <div class="resumo-box" id="resumo-contador">
+            <p style="margin:0; color:var(--cor-texto-mutado);">Nenhum registro iniciado ainda.</p>
+        </div>
+        
+        <div class="header-direito">
+            <div class="bloco-info-fila">
+                <h2>Fila Atual: <span id="contador">0</span></h2>
+                <div class="box-pesquisa">
+                    <input type="text" id="filtro-busca" placeholder="Pesquisar Residencial..." onkeyup="atualizarTela()">
+                </div>
+            </div>
+            <button id="btn-ordem" class="btn-acao btn-alternar" onclick="alternarOrdenacao()">Visualizando: Por Residencial 🔄</button>
+        </div>
+        
+        <div class="grid-fotos" id="grid-fotos"></div>
+    </div>
+</div>
+
+<!-- Modal de Edição -->
+<div id="modal-edicao" class="modal-overlay">
+    <div class="modal-content">
+        <h3>✏️ Editar Registro</h3>
+        <input type="hidden" id="edit-id">
+        
+        <div class="form-group">
+            <label>Condomínio:</label>
+            <select id="edit-condominio"></select>
+        </div>
+        
+        <div class="form-group">
+            <label>Agente/VTR:</label>
+            <input type="text" id="edit-agente">
+        </div>
+        
+        <div class="form-row">
+            <div class="form-group">
+                <label>Fase:</label>
+                <select id="edit-fase">
+                    <!-- Preenchido via JS dependendo do modo -->
+                </select>
+            </div>
+            <div class="form-group">
+                <label>Horário:</label>
+                <input type="time" id="edit-horario">
+            </div>
+        </div>
+        
+        <div class="form-row" style="margin-top:20px;">
+            <button class="btn-acao" style="background-color: var(--cor-principal);" onclick="salvarEdicao()">Aplicar Alterações</button>
+            <button class="btn-acao" style="background-color: #666;" onclick="fecharModalEdicao()">Cancelar</button>
+        </div>
+    </div>
+</div>
+
+<!-- Toast Desfazer Lixeira -->
+<div id="toast-desfazer" class="toast-escondido">
+    <span>Foto removida com sucesso.</span>
+    <button onclick="desfazerRemocao()">Desfazer ↩️</button>
+</div>
+
+<script src="script.js"></script>
+</body>
+</html>

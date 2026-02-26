@@ -1,0 +1,433 @@
+<!DOCTYPE html>
+<html lang="pt-PT">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Relatório de Paradas - Supervisão</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <style>
+        :root { --cor-principal: #00796b; --cor-hover: #004d40; }
+        
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #f0f4f4; margin: 0; padding: 20px; color: #333; }
+        .container { display: flex; gap: 20px; max-width: 1200px; margin: auto; }
+        .painel-esquerdo { flex: 1; background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); height: fit-content; position: sticky; top: 20px; }
+        .painel-direito { flex: 2; background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
+        h2 { color: var(--cor-principal); margin-top: 0; }
+        .form-row { display: flex; gap: 10px; margin-bottom: 15px; }
+        .form-group { flex: 1; margin-bottom: 15px; }
+        .form-row .form-group { margin-bottom: 0; }
+        label { display: block; margin-bottom: 5px; font-weight: bold; font-size: 14px; }
+        input[type="text"], input[type="time"], select { width: 100%; padding: 10px; box-sizing: border-box; border: 1px solid #ccc; border-radius: 4px; font-size: 15px; }
+        
+        .area-upload { border: 2px dashed var(--cor-principal); padding: 30px 20px; text-align: center; border-radius: 4px; background: #e0f2f1; cursor: pointer; margin-bottom: 15px; transition: all 0.2s ease; }
+        .area-upload:hover { background: #b2dfdb; }
+        .area-upload.dragover { background: #80cbc4; border-style: solid; transform: scale(1.02); }
+        
+        input[type="file"] { display: none; }
+        button { width: 100%; padding: 12px; background-color: var(--cor-principal); color: white; border: none; border-radius: 4px; font-size: 16px; font-weight: bold; cursor: pointer; transition: 0.2s; }
+        button:hover { background-color: var(--cor-hover); }
+        .btn-pdf { background-color: #0f9d58; margin-top: 20px; }
+        .btn-pdf:hover { background-color: #0b8043; }
+        .btn-limpar { background-color: #ea4335; margin-top: 10px; }
+        .btn-limpar:hover { background-color: #c5221f; }
+        .btn-alternar { background-color: #555; width: auto; padding: 8px 15px; font-size: 13px; }
+        .btn-alternar:hover { background-color: #333; }
+        
+        .status-salvamento { text-align: center; font-size: 12px; color: var(--cor-principal); margin-top: 10px; font-weight: bold; min-height: 15px; }
+        
+        .resumo-box { background: #e0f2f1; padding: 15px; border-radius: 8px; margin-bottom: 20px; border-left: 4px solid var(--cor-principal); }
+        .resumo-box h3 { margin-top: 0; color: var(--cor-principal); margin-bottom: 10px; font-size: 16px; }
+        .resumo-lista { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 5px; font-size: 13px; margin-top: 10px; }
+        
+        .grid-fotos { display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 15px; }
+        .card-foto { border: 1px solid #ddd; padding: 10px; border-radius: 6px; text-align: center; position: relative; background: #fff; border-top: 4px solid var(--cor-principal); }
+        .card-foto img { max-width: 100%; height: 130px; object-fit: cover; border-radius: 4px; margin-bottom: 10px; }
+        .card-foto p { margin: 3px 0; font-size: 12px; color: #555; }
+        .badge-condominio { display: inline-block; background: var(--cor-principal); color: white; padding: 3px 8px; border-radius: 12px; font-size: 11px; margin-bottom: 5px; }
+        .badge-fase { display: inline-block; background: #555; color: white; padding: 2px 6px; border-radius: 4px; font-size: 11px; margin-top: 5px; }
+        .badge-fase.inicio { background: #0f9d58; }
+        .badge-fase.termino { background: #ea4335; }
+        .btn-remover { position: absolute; top: 5px; right: 5px; background: #ea4335; color: white; border: none; border-radius: 50%; width: 25px; height: 25px; cursor: pointer; font-size: 12px; padding: 0; }
+        
+        .header-direito { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; }
+        .header-direito h2 { margin: 0; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <div class="painel-esquerdo">
+        <h2>Paradas Nos Residenciais</h2>
+        
+        <div class="form-row">
+            <div class="form-group">
+                <label>Supervisor:</label>
+                <input type="text" id="supervisor" value="Luis" placeholder="O seu nome">
+            </div>
+            <div class="form-group">
+                <label>Turno:</label>
+                <select id="turno">
+                    <option value="Noturno (18:00 às 06:00)">Noturno (18:00 às 06:00)</option>
+                    <option value="Diurno (06:00 às 18:00)">Diurno (06:00 às 18:00)</option>
+                </select>
+            </div>
+        </div>
+
+        <div class="form-group">
+            <label>Condomínio da Parada:</label>
+            <select id="condominio">
+                <option value="">Selecione o local...</option>
+                <option value="Arosa">Arosa</option>
+                <option value="Baden">Baden</option>
+                <option value="Basel">Basel</option>
+                <option value="Bern">Bern</option>
+                <option value="Biel">Biel</option>
+                <option value="Botanico">Botanico</option>
+                <option value="Davos">Davos</option>
+                <option value="Fribourg">Fribourg</option>
+                <option value="Genebra">Genebra</option>
+                <option value="Geneve">Geneve</option>
+                <option value="Glarus">Glarus</option>
+                <option value="La Vie">La Vie</option>
+                <option value="Lauerz">Lauerz</option>
+                <option value="Lenk">Lenk</option>
+                <option value="Lugano">Lugano</option>
+                <option value="Luzern">Luzern</option>
+                <option value="Novile">Novile</option>
+		<option value="Office">Office</option>
+                <option value="St. Moritz">St. Moritz</option>
+                <option value="Vevey">Vevey</option>
+                <option value="Villeneuve">Villeneuve</option>
+                <option value="Zermatt">Zermatt</option>
+                <option value="Zurich">Zurich</option>
+            </select>
+        </div>
+
+        <div class="form-group">
+            <label>Nome do Agente/Viatura:</label>
+            <input type="text" id="agente" placeholder="Ex: Silva / VTR 01">
+        </div>
+
+        <div class="form-row">
+            <div class="form-group">
+                <label>Fase da Parada:</label>
+                <select id="faseParada">
+                    <option value="">Selecione...</option>
+                    <option value="Início da Parada">Início da Parada</option>
+                    <option value="Término da Parada">Término da Parada</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label>Horário da Foto:</label>
+                <input type="time" id="horario">
+            </div>
+        </div>
+
+        <label>Anexe as fotografias da Parada:</label>
+        
+        <div class="area-upload" id="drop-area" onclick="document.getElementById('fotos-input').click()">
+            <p style="margin: 0; font-size: 16px;">📁 Clique aqui ou <strong>ARRASTE AS FOTOS</strong> para dentro desta caixa</p>
+            <input type="file" id="fotos-input" accept="image/*" multiple onchange="processarImagens(this.files)">
+        </div>
+
+        <button class="btn-pdf" onclick="gerarPDF()">Baixar Relatório em PDF</button>
+        <button class="btn-limpar" onclick="limparFila()">🗑️ Limpar Fila de Paradas</button>
+        
+        <div class="status-salvamento" id="status-salvo"></div>
+    </div>
+
+    <div class="painel-direito">
+        <div class="resumo-box" id="resumo-contador">
+            <p style="margin:0; color:#666;">Nenhuma parada iniciada registrada ainda.</p>
+        </div>
+        
+        <div class="header-direito">
+            <h2>Paradas na Fila: <span id="contador">0</span></h2>
+            <button id="btn-ordem" class="btn-alternar" onclick="alternarOrdenacao()">Visualizando: Por Residencial 🔄</button>
+        </div>
+        
+        <div class="grid-fotos" id="grid-fotos"></div>
+    </div>
+</div>
+
+<script>
+    let paradas = [];
+    let db;
+    let modoOrdenacao = 'condominio';
+
+    const requestDB = indexedDB.open("ParadasAppDB", 1);
+
+    requestDB.onupgradeneeded = function(event) {
+        db = event.target.result;
+        if (!db.objectStoreNames.contains("dados_paradas")) {
+            db.createObjectStore("dados_paradas");
+        }
+    };
+
+    requestDB.onsuccess = function(event) {
+        db = event.target.result;
+        carregarDadosOffline();
+    };
+
+    requestDB.onerror = function(event) {
+        mostrarAvisoSalvo("⚠️ Erro no banco de dados do navegador");
+    };
+
+    function salvarDadosOffline() {
+        if (!db) return;
+        const transaction = db.transaction(["dados_paradas"], "readwrite");
+        const store = transaction.objectStore("dados_paradas");
+        store.put(paradas, "lista_atual");
+        transaction.oncomplete = function() { mostrarAvisoSalvo("✅ Salvo no banco seguro"); };
+    }
+
+    function carregarDadosOffline() {
+        if (!db) return;
+        const transaction = db.transaction(["dados_paradas"], "readonly");
+        const store = transaction.objectStore("dados_paradas");
+        const request = store.get("lista_atual");
+        request.onsuccess = function(event) {
+            if (event.target.result) {
+                paradas = event.target.result;
+                atualizarTela();
+            }
+        };
+    }
+
+    function mostrarAvisoSalvo(mensagem) {
+        const aviso = document.getElementById('status-salvo');
+        aviso.innerText = mensagem;
+        setTimeout(() => { aviso.innerText = ""; }, 3000); 
+    }
+
+    const dropArea = document.getElementById('drop-area');
+    ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
+        dropArea.addEventListener(eventName, preventDefaults, false);
+        document.body.addEventListener(eventName, preventDefaults, false);
+    });
+    function preventDefaults(e) { e.preventDefault(); e.stopPropagation(); }
+    ['dragenter', 'dragover'].forEach(eventName => { dropArea.addEventListener(eventName, () => dropArea.classList.add('dragover'), false); });
+    ['dragleave', 'drop'].forEach(eventName => { dropArea.addEventListener(eventName, () => dropArea.classList.remove('dragover'), false); });
+    dropArea.addEventListener('drop', function(e) { processarImagens(e.dataTransfer.files); }, false);
+
+    function processarImagens(files) {
+        const condominio = document.getElementById('condominio').value;
+        const agente = document.getElementById('agente').value.trim();
+        const faseParada = document.getElementById('faseParada').value;
+        const horario = document.getElementById('horario').value;
+
+        if (!condominio || !agente || !faseParada || !horario) {
+            alert("Por favor, preencha todos os campos antes de arrastar as fotografias.");
+            document.getElementById('fotos-input').value = "";
+            return;
+        }
+
+        // --- SISTEMA DE PROTEÇÃO CONTRA DUPLICIDADE ---
+        const duplicado = paradas.some(r => r.condominio === condominio && r.fase === faseParada && r.horario === horario);
+        if (duplicado) {
+            const confirmar = confirm(`⚠️ ATENÇÃO: Você já lançou uma foto para ${condominio} (${faseParada}) exatamente às ${horario}.\n\nDeseja mesmo adicionar outra foto repetida para este horário?`);
+            if (!confirmar) {
+                document.getElementById('fotos-input').value = "";
+                return; // Bloqueia a inserção
+            }
+        }
+
+        if (files.length === 0) return;
+
+        Array.from(files).forEach(file => {
+            if (!file.type.startsWith('image/')) return;
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                const img = new Image();
+                img.onload = function() {
+                    const canvas = document.createElement('canvas');
+                    const ctx = canvas.getContext('2d');
+                    
+                    // OTIMIZAÇÃO: MAX_WIDTH reduzido de 800 para 500 (ideal para 3 colunas no PDF e poupa muita memória)
+                    const MAX_WIDTH = 500; 
+                    let width = img.width; let height = img.height;
+                    if (width > MAX_WIDTH) { height *= MAX_WIDTH / width; width = MAX_WIDTH; }
+                    canvas.width = width; canvas.height = height;
+                    ctx.drawImage(img, 0, 0, width, height);
+                    
+                    paradas.push({
+                        id: Date.now() + Math.random(),
+                        condominio: condominio,
+                        agente: agente,
+                        fase: faseParada,
+                        horario: horario,
+                        // OTIMIZAÇÃO: Qualidade do JPG reduzida sutilmente de 0.6 para 0.5
+                        foto: canvas.toDataURL('image/jpeg', 0.5)
+                    });
+                    atualizarTela(); salvarDadosOffline(); 
+                }
+                img.src = e.target.result;
+            }
+            reader.readAsDataURL(file);
+        });
+
+        document.getElementById('fotos-input').value = "";
+        document.getElementById('horario').value = "";
+        document.getElementById('faseParada').value = "";
+    }
+
+    function removerFoto(id) {
+        paradas = paradas.filter(r => r.id !== id);
+        atualizarTela(); salvarDadosOffline(); 
+    }
+
+    function limparFila() {
+        if (paradas.length === 0) return;
+        if (confirm("Deseja apagar todas as fotos? Isto não pode ser desfeito.")) {
+            paradas = []; atualizarTela(); salvarDadosOffline(); 
+        }
+    }
+
+    function alternarOrdenacao() {
+        modoOrdenacao = modoOrdenacao === 'condominio' ? 'horario' : 'condominio';
+        document.getElementById('btn-ordem').innerText = modoOrdenacao === 'condominio' 
+            ? 'Visualizando: Por Residencial 🔄' 
+            : 'Visualizando: Por Horário (WhatsApp) 🔄';
+        atualizarTela();
+    }
+
+    function obterValorTempo(horaStr) {
+        let valor = parseInt(horaStr.replace(':', ''));
+        if (valor < 1800) { valor += 2400; }
+        return valor;
+    }
+
+    function atualizarResumo() {
+        const resumoDiv = document.getElementById('resumo-contador');
+        const inicios = paradas.filter(r => r.fase === 'Início da Parada');
+        const total = inicios.length;
+
+        if (total === 0) {
+            resumoDiv.innerHTML = '<p style="margin:0; color:#666;">Nenhuma parada iniciada registrada ainda.</p>';
+            return;
+        }
+
+        const contagem = {};
+        inicios.forEach(r => { contagem[r.condominio] = (contagem[r.condominio] || 0) + 1; });
+
+        let html = `<h3>Resumo do Plantão: ${total} Paradas Realizadas</h3><div class="resumo-lista">`;
+        Object.keys(contagem).sort().forEach(cond => {
+            html += `<div>• ${cond}: <strong>${contagem[cond]}</strong></div>`;
+        });
+        html += `</div>`;
+        resumoDiv.innerHTML = html;
+    }
+
+    function atualizarTela() {
+        const grid = document.getElementById('grid-fotos');
+        grid.innerHTML = '';
+        document.getElementById('contador').innerText = paradas.length;
+
+        atualizarResumo(); 
+
+        let paradasOrdenadas = [...paradas].sort((a, b) => {
+            if (modoOrdenacao === 'condominio') {
+                if (a.condominio === b.condominio) return obterValorTempo(a.horario) - obterValorTempo(b.horario);
+                return a.condominio.localeCompare(b.condominio);
+            } else {
+                let tempoA = obterValorTempo(a.horario);
+                let tempoB = obterValorTempo(b.horario);
+                if (tempoA === tempoB) return a.condominio.localeCompare(b.condominio);
+                return tempoA - tempoB;
+            }
+        });
+
+        // OTIMIZAÇÃO: Acumula HTMl na string para renderizar de uma só vez na tela
+        let htmlRenderizado = "";
+
+        paradasOrdenadas.forEach(reg => {
+            let classeFase = reg.fase === 'Início da Parada' ? 'inicio' : 'termino';
+            htmlRenderizado += `
+                <div class="card-foto">
+                    <button class="btn-remover" onclick="removerFoto(${reg.id})">X</button>
+                    <span class="badge-condominio">📌 ${reg.condominio}</span>
+                    <img src="${reg.foto}" loading="lazy">
+                    <p>Agente/VTR: <strong>${reg.agente}</strong></p>
+                    <p>⏰ <strong>${reg.horario}</strong></p>
+                    <span class="badge-fase ${classeFase}">${reg.fase}</span>
+                </div>
+            `;
+        });
+        
+        grid.innerHTML = htmlRenderizado;
+    }
+
+    function gerarPDF() {
+        if (paradas.length === 0) { alert("Adicione pelo menos uma fotografia."); return; }
+        const supervisor = document.getElementById('supervisor').value || "Não informado";
+        const turno = document.getElementById('turno').value;
+        if (!window.jspdf) { alert("Erro de PDF."); return; }
+
+        const { jsPDF } = window.jspdf;
+        const doc = new jsPDF();
+        const dataHoje = new Date().toLocaleDateString('pt-BR');
+        
+        doc.setFontSize(18); doc.setFont("helvetica", "bold");
+        doc.text("Relatório Fotográfico de Paradas", 105, 15, null, null, "center");
+        doc.setFontSize(10); doc.setFont("helvetica", "normal");
+        doc.text(`Turno: ${turno} | Data: ${dataHoje} | Supervisor: ${supervisor}`, 105, 22, null, null, "center");
+        doc.line(10, 25, 200, 25);
+        let y = 35;
+
+        // --- RESUMO NO PDF ---
+        const inicios = paradas.filter(r => r.fase === 'Início da Parada');
+        const contagem = {};
+        inicios.forEach(r => { contagem[r.condominio] = (contagem[r.condominio] || 0) + 1; });
+        const totalRondas = inicios.length;
+
+        doc.setFillColor(240, 240, 240);
+        doc.rect(10, y - 5, 190, 8 + (Object.keys(contagem).length * 5) + 5, 'F');
+        doc.setFontSize(11); doc.setFont("helvetica", "bold");
+        doc.text(`Resumo Operacional: ${totalRondas} Paradas Realizadas`, 15, y + 1);
+        y += 7;
+
+        doc.setFontSize(9); doc.setFont("helvetica", "normal");
+        let colX = 15; let linhaY = y; let itemCount = 0;
+
+        Object.keys(contagem).sort().forEach(cond => {
+            doc.text(`• ${cond}: ${contagem[cond]}`, colX, linhaY);
+            linhaY += 5; itemCount++;
+            if (itemCount === 7) { colX += 60; linhaY = y; itemCount = 0; }
+        });
+
+        y += (Object.keys(contagem).length <= 7 ? Object.keys(contagem).length * 5 : 35);
+        y += 5; doc.line(10, y, 200, y); y += 10;
+
+        // --- PDF SEMPRE ORDENADO POR RESIDENCIAL ---
+        let paradasPDF = [...paradas].sort((a, b) => {
+            if (a.condominio === b.condominio) return obterValorTempo(a.horario) - obterValorTempo(b.horario);
+            return a.condominio.localeCompare(b.condominio);
+        });
+
+        let x = 15; let colunaAtual = 0; let condominioAtual = "";
+
+        paradasPDF.forEach((reg, index) => {
+            if (reg.condominio !== condominioAtual) {
+                if (colunaAtual !== 0) { y += 100; colunaAtual = 0; }
+                condominioAtual = reg.condominio;
+                if (y > 250) { doc.addPage(); y = 20; } else if (index !== 0) { y += 5; }
+                
+                doc.setFillColor(224, 242, 241); doc.rect(10, y - 6, 190, 10, 'F');
+                doc.setFontSize(12); doc.setFont("helvetica", "bold"); doc.setTextColor(0, 105, 92); 
+                doc.text(`RESIDENCIAL: ${condominioAtual} (Ponto Base)`, 15, y + 1);
+                doc.setTextColor(0, 0, 0); y += 15;
+            }
+            if (y > 260) { doc.addPage(); y = 20; colunaAtual = 0; }
+            x = 15 + (colunaAtual * 65);
+            doc.setFontSize(9); doc.setFont("helvetica", "bold"); doc.text(`Agente/VTR: ${reg.agente}`, x, y);
+            doc.setFont("helvetica", "normal"); doc.text(`Fase: ${reg.fase}`, x, y + 4); doc.text(`Horário: ${reg.horario}`, x, y + 8);
+            doc.addImage(reg.foto, 'JPEG', x, y + 10, 50, 70);
+            colunaAtual++;
+            if (colunaAtual === 3) { colunaAtual = 0; y += 90; }
+        });
+
+        doc.save(`Relatorio_Paradas_${turno.split(' ')[0]}_${dataHoje.replace(/\//g, '-')}.pdf`);
+    }
+</script>
+</body>
+</html>
