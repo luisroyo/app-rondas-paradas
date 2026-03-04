@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Relatórios Operacionais - Controle de HT</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <link rel="stylesheet" href="style.css">
+    <style>
+        body.tema-ht { 
+            --cor-principal: #fbbc05; 
+            --cor-hover: #f2a600; 
+            --cor-fundo-area: #fff9e6; 
+            --cor-fundo-hover: #ffefc2; 
+            --cor-fundo-drag: #ffe599; 
+            --cor-resumo-bg: #fff9e6; 
+            --cor-resumo-borda: #fbbc05; 
+        }
+        body.dark-mode.tema-ht {
+            --cor-fundo-area: #332b00;
+            --cor-fundo-hover: #4d4000;
+            --cor-fundo-drag: #665500;
+            --cor-resumo-bg: #332b00;
+        }
+    </style>
+</head>
+<body class="tema-ht">
+
+<div class="container">
+    <div class="painel-esquerdo">
+        <div class="header-topo-esquerdo">
+            <div class="header-abas">
+                <button class="aba ativa" style="border-color: #fbbc05; background: #fbbc05; color: #fff;" onclick="window.location.href='index.html'">🔙 Voltar para Rondas/Paradas</button>
+            </div>
+            <div class="toggle-container">
+                <label class="switch" title="Ativar Modo Noturno">
+                    <input type="checkbox" id="toggle-dark-mode" onchange="alternarModoNoturno()">
+                    <span class="slider round"></span>
+                </label>
+                <span class="icone-lua">🌙</span>
+            </div>
+        </div>
+
+        <h2 id="titulo-painel" style="color: #fbbc05;">Controle de Equipamentos</h2>
+        
+        <div class="form-group">
+            <label>Condomínio / Residencial:</label>
+            <select id="condominio">
+                <option value="">Selecione o local...</option>
+                <!-- Preenchido via JS -->
+            </select>
+        </div>
+
+        <div class="form-row">
+            <div class="form-group">
+                <label>Equipamento (Ex: Rádio Base, HT...):</label>
+                <input type="text" id="identificacao" placeholder="Ex: Rádio Base">
+            </div>
+            <div class="form-group">
+                <label>Quantidade:</label>
+                <input type="number" id="quantidade" value="1" min="1">
+            </div>
+        </div>
+
+        <label>Anexe as fotografias:</label>
+        
+        <div class="area-upload" id="drop-area" onclick="acionarInputFotos()" style="border-color: #fbbc05;">
+            <p style="margin: 0; font-size: 16px;">📁 Clique aqui ou <strong>ARRASTE AS FOTOS</strong> para dentro desta caixa</p>
+            <input type="file" id="fotos-input" accept="image/*" multiple onchange="processarImagens(this.files)">
+        </div>
+
+        <button class="btn-acao btn-pdf" style="background-color: #fbbc05; color: #333;" onclick="gerarPDF()">Baixar Relatório em PDF</button>
+        <button class="btn-acao btn-limpar" onclick="limparFila()">🗑️ Limpar Fila Atual</button>
+        
+        <div class="status-salvamento" id="status-salvo" style="color: #fbbc05;"></div>
+    </div>
+
+    <div class="painel-direito">
+        <div class="resumo-box" id="resumo-contador" style="border-left-color: #fbbc05;">
+            <p style="margin:0; color:var(--cor-texto-mutado);">Nenhum registro lançado ainda.</p>
+        </div>
+        
+        <div class="header-direito">
+            <div class="bloco-info-fila">
+                <h2 style="color: #fbbc05;">Fila Atual: <span id="contador">0</span></h2>
+                <div class="box-pesquisa">
+                    <input type="text" id="filtro-busca" placeholder="Pesquisar..." onkeyup="atualizarTela()">
+                </div>
+            </div>
+        </div>
+        
+        <div class="grid-fotos" id="grid-fotos"></div>
+    </div>
+</div>
+
+<!-- Modal de Edição -->
+<div id="modal-edicao" class="modal-overlay">
+    <div class="modal-content">
+        <h3 style="color: #fbbc05;">✏️ Editar Registro</h3>
+        <input type="hidden" id="edit-id">
+        
+        <div class="form-group">
+            <label>Condomínio / Residencial:</label>
+            <select id="edit-condominio"></select>
+        </div>
+        
+        <div class="form-group">
+            <label>Equipamento:</label>
+            <input type="text" id="edit-identificacao">
+        </div>
+        
+        <div class="form-group">
+            <label>Quantidade:</label>
+            <input type="number" id="edit-quantidade" min="1">
+        </div>
+        
+        <div class="form-row" style="margin-top:20px;">
+            <button class="btn-acao" style="background-color: #fbbc05; color: #333;" onclick="salvarEdicao()">Aplicar Alterações</button>
+            <button class="btn-acao" style="background-color: #666;" onclick="fecharModalEdicao()">Cancelar</button>
+        </div>
+    </div>
+</div>
+
+<!-- Toast Desfazer Lixeira -->
+<div id="toast-desfazer" class="toast-escondido">
+    <span>Foto removida com sucesso.</span>
+    <button onclick="desfazerRemocao()">Desfazer ↩️</button>
+</div>
+
+<script src="script-ht.js"></script>
+</body>
+</html>

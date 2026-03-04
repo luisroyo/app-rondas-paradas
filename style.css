@@ -79,7 +79,7 @@ h2 { color: var(--cor-principal); margin-top: 0; }
 .form-group { flex: 1; margin-bottom: 15px; }
 .form-row .form-group { margin-bottom: 0; }
 label { display: block; margin-bottom: 5px; font-weight: bold; font-size: 14px; color: var(--cor-texto); }
-input[type="text"], input[type="time"], select { width: 100%; padding: 10px; box-sizing: border-box; border: 1px solid var(--cor-borda); border-radius: 4px; font-size: 15px; background: var(--cor-painel); color: var(--cor-texto); }
+input[type="text"], input[type="time"], input[type="number"], select { width: 100%; padding: 10px; box-sizing: border-box; border: 1px solid var(--cor-borda); border-radius: 4px; font-size: 15px; background: var(--cor-painel); color: var(--cor-texto); }
 
 .area-upload { border: 2px dashed var(--cor-principal); padding: 30px 20px; text-align: center; border-radius: 4px; background: var(--cor-fundo-area); cursor: pointer; margin-bottom: 15px; transition: all 0.2s ease; }
 .area-upload:hover { background: var(--cor-fundo-hover); }
