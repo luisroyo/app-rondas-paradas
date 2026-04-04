@@ -27,8 +27,59 @@ window.onload = () => {
         document.body.classList.add('dark-mode');
     }
 
+    // Salvar Agente, Supervisor e Turno no LocalStorage automaticamente
+    document.getElementById('agente').addEventListener('input', function() {
+        localStorage.setItem('agente_salvo', this.value);
+    });
+    document.getElementById('supervisor').addEventListener('input', function() {
+        localStorage.setItem('supervisor_salvo', this.value);
+    });
+    document.getElementById('turno').addEventListener('change', function() {
+        localStorage.setItem('turno_salvo', this.value);
+    });
+
+    // Restaurar Supervisor e Turno se existirem
+    if (localStorage.getItem('supervisor_salvo')) {
+        document.getElementById('supervisor').value = localStorage.getItem('supervisor_salvo');
+    }
+    if (localStorage.getItem('turno_salvo')) {
+        document.getElementById('turno').value = localStorage.getItem('turno_salvo');
+    }
+
     mudarModo('ronda');
+    carregarHistoricoAgentes();
 };
+
+function carregarHistoricoAgentes() {
+    let hist = JSON.parse(localStorage.getItem('agentes_historico') || '[]');
+    let dl = document.getElementById('lista-agentes');
+    if (dl) {
+        dl.innerHTML = '';
+        hist.forEach(nome => {
+            let opt = document.createElement('option');
+            opt.value = nome;
+            dl.appendChild(opt);
+        });
+    }
+}
+
+function salvarNovoAgenteNoHistorico(nome) {
+    if (!nome) return;
+    let hist = JSON.parse(localStorage.getItem('agentes_historico') || '[]');
+    if (!hist.includes(nome)) {
+        hist.push(nome);
+        localStorage.setItem('agentes_historico', JSON.stringify(hist));
+        carregarHistoricoAgentes();
+    }
+}
+
+function limparHistoricoAgentes() {
+    if (confirm("Deseja limpar todos os nomes de agentes salvos na lista?")) {
+        localStorage.removeItem('agentes_historico');
+        carregarHistoricoAgentes();
+        document.getElementById('agente').value = '';
+    }
+}
 
 function alternarModoNoturno() {
     const isDark = document.getElementById('toggle-dark-mode').checked;
@@ -69,7 +120,7 @@ function mudarModo(novoModo) {
     document.getElementById('edit-fase').innerHTML = optionsEditFase;
 
     document.getElementById('condominio').value = '';
-    document.getElementById('agente').value = '';
+    document.getElementById('agente').value = localStorage.getItem('agente_salvo') || '';
     document.getElementById('horario').value = '';
 
     atualizarTela();
@@ -153,6 +204,8 @@ function processarImagens(files) {
         document.getElementById('fotos-input').value = "";
         return;
     }
+
+    salvarNovoAgenteNoHistorico(agente);
 
     if (files.length === 0) return;
 

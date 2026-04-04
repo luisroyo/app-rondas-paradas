@@ -52,7 +52,12 @@
 
         <div class="form-group">
             <label id="label-agente">Nome do Agente (Ronda):</label>
-            <input type="text" id="agente" placeholder="Ex: Silva">
+            <input type="text" id="agente" list="lista-agentes" autocomplete="off" placeholder="Ex: Silva">
+            <datalist id="lista-agentes"></datalist>
+            <div style="display:flex; justify-content:space-between;">
+                <small style="color: var(--cor-texto-mutado); font-size: 11px; margin-top: 4px;">💾 Nomes digitados ficam numa lista (clique 2x para ver).</small>
+                <small style="color: var(--cor-texto-mutado); font-size: 11px; margin-top: 4px; cursor:pointer;" onclick="limparHistoricoAgentes()">🗑️ Limpar Nomes</small>
+            </div>
         </div>
 
         <div class="form-row">
