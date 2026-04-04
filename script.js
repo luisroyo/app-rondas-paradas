@@ -189,6 +189,13 @@ dropArea.addEventListener('drop', function(e) {
     processarImagens(e.dataTransfer.files); 
 }, false);
 
+// Suporte para Ctrl+V (Colar imagem direto da área de transferência)
+document.addEventListener('paste', function(e) {
+    if (e.clipboardData && e.clipboardData.files.length > 0) {
+        processarImagens(e.clipboardData.files);
+    }
+});
+
 function acionarInputFotos() {
     document.getElementById('fotos-input').click();
 }
