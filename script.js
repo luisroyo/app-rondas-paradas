@@ -51,25 +51,36 @@ window.onload = () => {
 };
 
 function carregarHistoricoAgentes() {
-    let hist = JSON.parse(localStorage.getItem('agentes_historico') || '[]');
-    let dl = document.getElementById('lista-agentes');
-    if (dl) {
-        dl.innerHTML = '';
-        hist.forEach(nome => {
-            let opt = document.createElement('option');
-            opt.value = nome;
-            dl.appendChild(opt);
-        });
+    try {
+        let hist = JSON.parse(localStorage.getItem('agentes_historico') || '[]');
+        if (!Array.isArray(hist)) hist = [];
+        let dl = document.getElementById('lista-agentes');
+        if (dl) {
+            dl.innerHTML = '';
+            hist.forEach(nome => {
+                let opt = document.createElement('option');
+                opt.value = nome;
+                dl.appendChild(opt);
+            });
+        }
+    } catch(e) {
+        console.error("Erro", e);
     }
 }
 
 function salvarNovoAgenteNoHistorico(nome) {
     if (!nome) return;
-    let hist = JSON.parse(localStorage.getItem('agentes_historico') || '[]');
-    if (!hist.includes(nome)) {
-        hist.push(nome);
-        localStorage.setItem('agentes_historico', JSON.stringify(hist));
-        carregarHistoricoAgentes();
+    try {
+        let hist = JSON.parse(localStorage.getItem('agentes_historico') || '[]');
+        if (!Array.isArray(hist)) hist = [];
+        if (!hist.includes(nome)) {
+            hist.push(nome);
+            localStorage.setItem('agentes_historico', JSON.stringify(hist));
+            carregarHistoricoAgentes();
+        }
+    } catch(e) {
+        console.error("Erro", e);
+        localStorage.setItem('agentes_historico', JSON.stringify([nome]));
     }
 }
 
