@@ -186,7 +186,20 @@ function preventD(e) { e.preventDefault(); e.stopPropagation(); }
 ['dragenter', 'dragover'].forEach(e => dropArea.addEventListener(e, () => dropArea.classList.add('dragover'), false));
 ['dragleave', 'drop'].forEach(e => dropArea.addEventListener(e, () => dropArea.classList.remove('dragover'), false));
 dropArea.addEventListener('drop', function(e) { 
-    processarImagens(e.dataTransfer.files); 
+    // Fallback avançado para arrastar do WhatsApp Web/Chrome
+    let arquivosExtraidos = Array.from(e.dataTransfer.files);
+    
+    if (arquivosExtraidos.length === 0 && e.dataTransfer.items) {
+        for (let i = 0; i < e.dataTransfer.items.length; i++) {
+            let item = e.dataTransfer.items[i];
+            if (item.type.indexOf('image/') !== -1) {
+                let arquivoDaWeb = item.getAsFile();
+                if (arquivoDaWeb) arquivosExtraidos.push(arquivoDaWeb);
+            }
+        }
+    }
+    
+    processarImagens(arquivosExtraidos); 
 }, false);
 
 // Suporte para Ctrl+V (Colar imagem direto da área de transferência)
@@ -495,20 +508,32 @@ function gerarPDF() {
     inicios.forEach(r => { contagem[r.condominio] = (contagem[r.condominio] || 0) + 1; });
     const totalAcoes = inicios.length;
     
+    const numeroDeAtivos = Object.keys(contagem).length;
+    let linhasPorColuna = Math.ceil(numeroDeAtivos / 3);
+    if (linhasPorColuna < 1) linhasPorColuna = 1;
+    
+    let alturaCaixa = 12 + (linhasPorColuna * 5);
+    
     doc.setFillColor(240, 240, 240);
-    doc.rect(10, y - 5, 190, 8 + (Object.keys(contagem).length * 5) + 5, 'F');
+    doc.rect(10, y - 5, 190, alturaCaixa, 'F');
     doc.setFontSize(11); doc.setFont("helvetica", "bold");
     doc.text(`Resumo Operacional: ${totalAcoes} ${modoAtual === 'ronda' ? 'Rondas' : 'Paradas'} Realizadas`, 15, y + 1);
     y += 7;
 
     doc.setFontSize(9); doc.setFont("helvetica", "normal");
     let colX = 15; let linhaY = y; let itemCount = 0;
+    
     Object.keys(contagem).sort().forEach(cond => {
         doc.text(`• ${cond}: ${contagem[cond]}`, colX, linhaY);
         linhaY += 5; itemCount++;
-        if (itemCount === 7) { colX += 60; linhaY = y; itemCount = 0; }
+        if (itemCount === linhasPorColuna) { 
+            colX += 60; 
+            linhaY = y; 
+            itemCount = 0; 
+        }
     });
-    y += (Object.keys(contagem).length <= 7 ? Object.keys(contagem).length * 5 : 35);
+
+    y += (linhasPorColuna * 5);
     y += 5; doc.line(10, y, 200, y); y += 10;
 
     // --- CORPO DO PDF ---
