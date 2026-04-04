@@ -218,10 +218,18 @@ function processarImagens(files) {
 
     salvarNovoAgenteNoHistorico(agente);
 
-    if (files.length === 0) return;
+    if (files.length === 0) {
+        alert("Erro: Nenhuma foto detectada no momento de arrastar. Se você arrastou do WhatsApp Web ou outro aplicativo novo, tente baixar a foto no seu computador antes ou clique na caixa para selecionar.");
+        return;
+    }
 
+    let arquivosValidos = 0;
     Array.from(files).forEach(file => {
-        if (!file.type.startsWith('image/')) return;
+        if (!file.type.startsWith('image/')) {
+            alert(`Atenção: O item "${file.name || 'desconhecido'}" não é um formato de imagem válido ou tem formato desconhecido pelo navegador.`);
+            return;
+        }
+        arquivosValidos++;
         const reader = new FileReader();
         reader.onload = function(e) {
             const img = new Image();
