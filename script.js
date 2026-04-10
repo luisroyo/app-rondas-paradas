@@ -38,6 +38,11 @@ window.onload = () => {
         localStorage.setItem('turno_salvo', this.value);
     });
 
+    // Evento para preenchimento rápido
+    document.getElementById('texto-resumo').addEventListener('input', function() {
+        inserirDadosRapidos(this.value);
+    });
+
     // Restaurar Supervisor e Turno se existirem
     if (localStorage.getItem('supervisor_salvo')) {
         document.getElementById('supervisor').value = localStorage.getItem('supervisor_salvo');
@@ -135,6 +140,72 @@ function mudarModo(novoModo) {
     document.getElementById('horario').value = '';
 
     atualizarTela();
+}
+
+// Preenchimento Automático via Texto Colado
+function inserirDadosRapidos(texto) {
+    if (!texto || !texto.trim()) return;
+    
+    const textoLow = texto.toLowerCase();
+    const textoUpper = texto.toUpperCase();
+    
+    // Auto-switch modo (Ronda ou Parada)
+    if (textoLow.includes('ronda') && modoAtual !== 'ronda') {
+        mudarModo('ronda');
+    } else if (textoLow.includes('parada') && modoAtual !== 'parada') {
+        mudarModo('parada');
+    }
+
+    // 1. Horário (HH:MM)
+    const matchHora = texto.match(/\b(\d{2}:\d{2})\b/);
+    if (matchHora) {
+        document.getElementById('horario').value = matchHora[1];
+    }
+    
+    // 2. Condomínio
+    for (let cond of CONDOMINIOS) {
+        let condSimplificado = cond.toUpperCase().replace('ASSOCIAÇÃO ', '');
+        if (textoUpper.includes(cond.toUpperCase()) || textoUpper.includes(condSimplificado)) {
+            document.getElementById('condominio').value = cond;
+            break;
+        }
+    }
+    
+    // 3. Fase
+    if (textoLow.includes('inicio') || textoLow.includes('início')) {
+        document.getElementById('faseRegistro').value = modoAtual === 'ronda' ? "Início da Ronda" : "Início da Parada";
+    } else if (textoLow.includes('termino') || textoLow.includes('término') || textoLow.includes('fim')) {
+        document.getElementById('faseRegistro').value = modoAtual === 'ronda' ? "Término da Ronda" : "Término da Parada";
+    }
+    
+    // 4. Agente / Moto
+    let linhas = texto.split('\n').map(l => l.trim()).filter(l => l.length > 0);
+    let linhasAgente = [];
+    
+    for (let linha of linhas) {
+        let linhaL = linha.toLowerCase();
+        
+        // Ignora linha se bater com o condomínio
+        let achouCond = false;
+        for (let cond of CONDOMINIOS) {
+            let condS = cond.toLowerCase().replace('associação ', '');
+            if (linhaL.includes(cond.toLowerCase()) || linhaL.includes(condS)) { achouCond = true; break; }
+        }
+        if (achouCond) continue;
+        
+        // Ignora linha se contiver horário ou palavras de fase
+        if (/\b\d{2}:\d{2}\b/.test(linha) || linhaL.includes('inicio') || linhaL.includes('início') || linhaL.includes('termino') || linhaL.includes('término') || linhaL.includes('fim')) {
+            continue;
+        }
+        
+        linhasAgente.push(linha);
+    }
+    
+    if (linhasAgente.length > 0) {
+        let agenteValue = linhasAgente.join(' / ').replace(/\s+/g, ' ');
+        document.getElementById('agente').value = agenteValue;
+        localStorage.setItem('agente_salvo', agenteValue);
+    }
 }
 
 // Banco de Dados IndexedDB unificado
