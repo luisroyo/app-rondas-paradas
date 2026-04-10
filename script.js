@@ -491,7 +491,13 @@ function gerarPDF() {
 
     const { jsPDF } = window.jspdf;
     const doc = new jsPDF();
-    const dataHoje = new Date().toLocaleDateString('pt-BR');
+    
+    let dataRelatorio = new Date();
+    // Ajuste para turno noturno: se passou da meia-noite (até 12h), pertence ao dia anterior
+    if (turno.includes('Noturno') && dataRelatorio.getHours() < 12) {
+        dataRelatorio.setDate(dataRelatorio.getDate() - 1);
+    }
+    const dataHoje = dataRelatorio.toLocaleDateString('pt-BR');
     
     const tituloPDF = modoAtual === 'ronda' ? "Relatório Fotográfico de Rondas" : "Relatório Fotográfico de Paradas";
     
