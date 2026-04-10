@@ -149,12 +149,7 @@ function inserirDadosRapidos(texto) {
     const textoLow = texto.toLowerCase();
     const textoUpper = texto.toUpperCase();
     
-    // Auto-switch modo (Ronda ou Parada)
-    if (textoLow.includes('ronda') && modoAtual !== 'ronda') {
-        mudarModo('ronda');
-    } else if (textoLow.includes('parada') && modoAtual !== 'parada') {
-        mudarModo('parada');
-    }
+    // O modo continuará sendo o que o usuário escolheu visualmente nas abas do topo.
 
     // 1. Horário (HH:MM)
     const matchHora = texto.match(/\b(\d{2}:\d{2})\b/);
