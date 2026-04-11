@@ -149,6 +149,9 @@ function inserirDadosRapidos(texto) {
     // Tratamento para variações de digitação do St. Moritz (ex: St.moritz sem espaço)
     texto = texto.replace(/st\.?\s*moritz/gi, 'St. Moritz');
     
+    // Tratamento para variações do La Vie (ex: Lavie sem espaço)
+    texto = texto.replace(/\bla\s*vie\b/gi, 'La Vie');
+    
     const textoLow = texto.toLowerCase();
     const textoUpper = texto.toUpperCase();
     
