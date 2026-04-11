@@ -146,6 +146,9 @@ function mudarModo(novoModo) {
 function inserirDadosRapidos(texto) {
     if (!texto || !texto.trim()) return;
     
+    // Tratamento para variações de digitação do St. Moritz (ex: St.moritz sem espaço)
+    texto = texto.replace(/st\.?\s*moritz/gi, 'St. Moritz');
+    
     const textoLow = texto.toLowerCase();
     const textoUpper = texto.toUpperCase();
     
