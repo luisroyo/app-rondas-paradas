@@ -152,6 +152,9 @@ function inserirDadosRapidos(texto) {
     // Tratamento para variações do La Vie (ex: Lavie sem espaço)
     texto = texto.replace(/\bla\s*vie\b/gi, 'La Vie');
     
+    // Tratamento para variações do Genebra (ex: Eco Vila, Ecovilla, Eco Villa Genebra)
+    texto = texto.replace(/eco\s*vill?[ea]s?(?:\s*genebra)?/gi, 'Genebra');
+    
     const textoLow = texto.toLowerCase();
     const textoUpper = texto.toUpperCase();
     
