@@ -1,0 +1,185 @@
+// Geração de Relatórios em PDF
+
+function gerarPDF() {
+    const registrosAtuais = registros.filter(r => r.modo === modoAtual);
+    if (registrosAtuais.length === 0) {
+        alert("Adicione fotografias para gerar o relatório."); return;
+    }
+
+    const supervisor = document.getElementById('supervisor').value || "Não informado";
+    const turno = document.getElementById('turno').value;
+    if (!window.jspdf) { alert("A biblioteca jsPDF não foi carregada corretamente."); return; }
+
+    const { jsPDF } = window.jspdf;
+    const doc = new jsPDF();
+    
+    let dataRelatorio = new Date();
+    if (turno.includes('Noturno') && dataRelatorio.getHours() < 12) {
+        dataRelatorio.setDate(dataRelatorio.getDate() - 1);
+    }
+    const dataHoje = dataRelatorio.toLocaleDateString('pt-BR');
+    
+    const tituloPDF = modoAtual === 'ronda' ? "Relatório Fotográfico de Rondas" : "Relatório Fotográfico de Paradas";
+    
+    doc.setFontSize(18); doc.setFont("helvetica", "bold");
+    doc.text(tituloPDF, 105, 15, null, null, "center");
+    doc.setFontSize(10); doc.setFont("helvetica", "normal");
+    doc.text(`Turno: ${turno} | Data: ${dataHoje} | Supervisor: ${supervisor}`, 105, 22, null, null, "center");
+    doc.line(10, 25, 200, 25);
+    let y = 35;
+
+    // --- RESUMO NO PDF ---
+    const condsInfo = {};
+    registrosAtuais.forEach(r => {
+        if (!condsInfo[r.condominio]) condsInfo[r.condominio] = [];
+        condsInfo[r.condominio].push(r);
+    });
+
+    const contagem = {};
+    const medias = {};
+    const duracoesCardPDF = {}; 
+    let totalAcoes = 0;
+
+    Object.keys(condsInfo).forEach(cond => {
+        let regs = condsInfo[cond].sort((a,b) => obterValorTempo(a.horario) - obterValorTempo(b.horario));
+        let duracoes = [];
+        let inicio = null;
+        let qtd = 0;
+        for (let reg of regs) {
+            if (reg.fase.startsWith('Início')) {
+                inicio = reg;
+                qtd++;
+            } else if (reg.fase.startsWith('Término') && inicio) {
+                let dur = calcularDuracaoMinutos(inicio.horario, reg.horario);
+                duracoes.push(dur);
+                duracoesCardPDF[reg.id] = formatarTempo(dur);
+                inicio = null;
+            }
+        }
+        if (qtd > 0) {
+            contagem[cond] = qtd;
+            totalAcoes += qtd;
+            if (duracoes.length > 0) {
+                let soma = duracoes.reduce((a,b) => a+b, 0);
+                medias[cond] = formatarTempo(Math.round(soma / duracoes.length));
+            } else {
+                medias[cond] = "";
+            }
+        }
+    });
+    
+    const numeroDeAtivos = Object.keys(contagem).length;
+    let linhasPorColuna = Math.ceil(numeroDeAtivos / 2);
+    if (linhasPorColuna < 1) linhasPorColuna = 1;
+    
+    let alturaCaixa = 12 + (linhasPorColuna * 5);
+    
+    doc.setFillColor(240, 240, 240);
+    doc.rect(10, y - 5, 190, alturaCaixa, 'F');
+    doc.setFontSize(11); doc.setFont("helvetica", "bold");
+    doc.text(`Resumo Operacional: ${totalAcoes} ${modoAtual === 'ronda' ? 'Rondas' : 'Paradas'} Realizadas`, 15, y + 1);
+    y += 7;
+
+    doc.setFontSize(9); doc.setFont("helvetica", "normal");
+    let colX = 15; let linhaY = y; let itemCount = 0;
+    
+    Object.keys(contagem).sort().forEach(cond => {
+        let textoMed = medias[cond] ? ` - Méd: ${medias[cond]}` : "";
+        doc.text(`• ${cond}: ${contagem[cond]}${textoMed}`, colX, linhaY);
+        linhaY += 5; itemCount++;
+        if (itemCount === linhasPorColuna) { 
+            colX += 90; 
+            linhaY = y; 
+            itemCount = 0; 
+        }
+    });
+
+    y += (linhasPorColuna * 5);
+    y += 5; doc.line(10, y, 200, y); y += 10;
+
+    // --- CORPO DO PDF ---
+    let regsPDF = [...registrosAtuais].sort((a, b) => {
+        if (a.condominio === b.condominio) return obterValorTempo(a.horario) - obterValorTempo(b.horario);
+        return a.condominio.localeCompare(b.condominio);
+    });
+
+    const corBase = modoAtual === 'ronda' ? [26, 115, 232] : [0, 105, 92];
+    const corBg = modoAtual === 'ronda' ? [230, 240, 255] : [224, 242, 241];
+    
+    let x = 15; let colunaAtual = 0; let condominioAtual = "";
+
+    function renderHeaderCond(nome, posY) {
+        doc.setFillColor(...corBg); doc.rect(10, posY - 6, 190, 10, 'F');
+        doc.setFontSize(12); doc.setFont("helvetica", "bold"); doc.setTextColor(...corBase); 
+        doc.text(`RESIDENCIAL: ${nome}${modoAtual === 'parada' ? ' (Ponto Base)' : ''}`, 15, posY + 1);
+        doc.setTextColor(0, 0, 0);
+    }
+
+    regsPDF.forEach((reg, index) => {
+        let isNovoCondominio = (reg.condominio !== condominioAtual);
+        
+        if (isNovoCondominio && colunaAtual !== 0) { 
+            y += 90; 
+            colunaAtual = 0; 
+        }
+
+        if (isNovoCondominio) {
+            if (index !== 0 && y <= 190) { y += 5; } 
+            if (y > 190) { doc.addPage(); y = 20; }
+            
+            condominioAtual = reg.condominio;
+            renderHeaderCond(condominioAtual, y);
+            y += 15;
+            colunaAtual = 0;
+        } else {
+            if (colunaAtual === 0 && y > 200) {
+                doc.addPage(); y = 20;
+                renderHeaderCond(condominioAtual + " (Continuação)", y);
+                y += 15;
+            }
+        }
+
+        x = 15 + (colunaAtual * 65);
+        
+        doc.setFontSize(9); doc.setFont("helvetica", "bold"); doc.text(`Agente: ${reg.agente}`, x, y);
+        doc.setFont("helvetica", "normal"); doc.text(`Fase: ${reg.fase}`, x, y + 4); 
+        doc.text(`Horário: ${reg.horario}`, x, y + 8);
+        
+        let startImgY = y + 10;
+        if (reg.fase.startsWith('Término') && duracoesCardPDF[reg.id]) {
+            doc.setFont("helvetica", "bold"); 
+            doc.text(`Duração: ${duracoesCardPDF[reg.id]}`, x, y + 12);
+            doc.setFont("helvetica", "normal");
+            startImgY = y + 14;
+        }
+        
+        doc.addImage(reg.foto, 'JPEG', x, startImgY, 50, 68);
+        
+        colunaAtual++;
+        if (colunaAtual === 3) { 
+            colunaAtual = 0; 
+            y += 90; 
+        }
+    });
+
+    // --- ASSINATURAS NO PDF ---
+    if (colunaAtual > 0) y += 90; 
+    if (y > 240) { doc.addPage(); y = 40; } else { y += 20; }
+    
+    doc.setDrawColor(0);
+    doc.line(30, y, 90, y);
+    doc.line(120, y, 180, y);
+    
+    doc.setFont("helvetica", "bold"); doc.setFontSize(10);
+    doc.text("Assinatura do Supervisor", 60, y + 5, null, null, "center");
+    doc.text(`Assinatura da Central`, 150, y + 5, null, null, "center");
+
+    const prefixo = modoAtual === 'ronda' ? 'Rondas' : 'Paradas';
+    doc.save(`Relatorio_${prefixo}_${turno.split(' ')[0]}_${dataHoje.replace(/\//g, '-')}.pdf`);
+
+    setTimeout(() => {
+        if (confirm("✅ Relatório gerado com sucesso!\n\nDeseja limpar a tela agora para o próximo plantão?")) {
+            limparFila();
+        }
+    }, 1500);
+}
