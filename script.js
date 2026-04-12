@@ -744,19 +744,40 @@ function gerarPDF() {
     
     let x = 15; let colunaAtual = 0; let condominioAtual = "";
 
-    regsPDF.forEach((reg, index) => {
-        if (reg.condominio !== condominioAtual) {
-            if (colunaAtual !== 0) { y += 100; colunaAtual = 0; }
-            condominioAtual = reg.condominio;
-            if (y > 250) { doc.addPage(); y = 20; } else if (index !== 0) { y += 5; }
+    function renderHeaderCond(nome, posY) {
+        doc.setFillColor(...corBg); doc.rect(10, posY - 6, 190, 10, 'F');
+        doc.setFontSize(12); doc.setFont("helvetica", "bold"); doc.setTextColor(...corBase); 
+        doc.text(`RESIDENCIAL: ${nome}${modoAtual === 'parada' ? ' (Ponto Base)' : ''}`, 15, posY + 1);
+        doc.setTextColor(0, 0, 0);
+    }
 
-            doc.setFillColor(...corBg); doc.rect(10, y - 6, 190, 10, 'F');
-            doc.setFontSize(12); doc.setFont("helvetica", "bold"); doc.setTextColor(...corBase); 
-            doc.text(`RESIDENCIAL: ${condominioAtual}${modoAtual === 'parada' ? ' (Ponto Base)' : ''}`, 15, y + 1);
-            doc.setTextColor(0, 0, 0); y += 15;
+    regsPDF.forEach((reg, index) => {
+        let isNovoCondominio = (reg.condominio !== condominioAtual);
+        
+        // Se estávamos no meio de uma linha e mudou o condomínio, pula uma linha
+        if (isNovoCondominio && colunaAtual !== 0) { 
+            y += 90; 
+            colunaAtual = 0; 
         }
 
-        if (y > 260) { doc.addPage(); y = 20; colunaAtual = 0; }
+        if (isNovoCondominio) {
+            // Verifica se tem espaço para pelo menos o cabeçalho (~15) e 1 foto (~80) = ~95px
+            if (index !== 0 && y <= 190) { y += 5; } // pequena margem
+            if (y > 190) { doc.addPage(); y = 20; }
+            
+            condominioAtual = reg.condominio;
+            renderHeaderCond(condominioAtual, y);
+            y += 15;
+            colunaAtual = 0;
+        } else {
+            // Se continuou no mesmo condomínio, mas iniciou uma linha nova (coluna 0) e não cabe na página
+            if (colunaAtual === 0 && y > 200) {
+                doc.addPage(); y = 20;
+                renderHeaderCond(condominioAtual + " (Continuação)", y);
+                y += 15;
+            }
+        }
+
         x = 15 + (colunaAtual * 65);
         
         doc.setFontSize(9); doc.setFont("helvetica", "bold"); doc.text(`Agente: ${reg.agente}`, x, y);
@@ -774,7 +795,10 @@ function gerarPDF() {
         doc.addImage(reg.foto, 'JPEG', x, startImgY, 50, 68);
         
         colunaAtual++;
-        if (colunaAtual === 3) { colunaAtual = 0; y += 90; }
+        if (colunaAtual === 3) { 
+            colunaAtual = 0; 
+            y += 90; 
+        }
     });
 
     // --- ASSINATURAS NO PDF ---
