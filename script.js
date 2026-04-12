@@ -482,22 +482,75 @@ function obterValorTempo(horaStr) {
     return valor;
 }
 
+function calcularDuracaoMinutos(inicioStr, terminoStr) {
+    let [h1, m1] = inicioStr.split(':').map(Number);
+    let [h2, m2] = terminoStr.split(':').map(Number);
+    let min1 = h1 * 60 + m1;
+    let min2 = h2 * 60 + m2;
+    if (min2 < min1) {
+        min2 += 24 * 60;
+    }
+    return min2 - min1;
+}
+
+function formatarTempo(minutos) {
+    if (minutos < 60) return `${minutos} min`;
+    let h = Math.floor(minutos / 60);
+    let m = minutos % 60;
+    return m > 0 ? `${h}h ${m}min` : `${h}h`;
+}
+
 function atualizarResumo(registrosAtuais) {
     const resumoDiv = document.getElementById('resumo-contador');
-    const inicios = registrosAtuais.filter(r => r.fase.startsWith('Início'));
-    const total = inicios.length;
     
-    if (total === 0) {
+    const condsInfo = {};
+    registrosAtuais.forEach(r => {
+        if (!condsInfo[r.condominio]) condsInfo[r.condominio] = [];
+        condsInfo[r.condominio].push(r);
+    });
+
+    let totalInicios = 0;
+    Object.keys(condsInfo).forEach(cond => {
+        let regs = condsInfo[cond].sort((a,b) => obterValorTempo(a.horario) - obterValorTempo(b.horario));
+        let duracoes = [];
+        let inicio = null;
+        let contagemInicios = 0;
+        for (let reg of regs) {
+            if (reg.fase.startsWith('Início')) {
+                inicio = reg;
+                contagemInicios++;
+            } else if (reg.fase.startsWith('Término') && inicio) {
+                duracoes.push(calcularDuracaoMinutos(inicio.horario, reg.horario));
+                inicio = null;
+            }
+        }
+        
+        let mediaTexto = "";
+        if (duracoes.length > 0) {
+            let soma = duracoes.reduce((a,b) => a+b, 0);
+            let media = Math.round(soma / duracoes.length);
+            mediaTexto = `(Méd: ${formatarTempo(media)})`;
+        }
+        
+        condsInfo[cond].resumo = {
+            qtd: contagemInicios,
+            mediaTexto: mediaTexto
+        };
+        totalInicios += contagemInicios;
+    });
+
+    if (totalInicios === 0) {
         resumoDiv.innerHTML = `<p style="margin:0; color:var(--cor-texto-mutado);">Nenhum plantão iniciado ainda.</p>`;
         return;
     }
 
-    const contagem = {};
-    inicios.forEach(r => { contagem[r.condominio] = (contagem[r.condominio] || 0) + 1; });
     const txtPlural = modoAtual === 'ronda' ? 'Rondas Realizadas' : 'Paradas Realizadas';
-    let html = `<h3>Resumo do Plantão: ${total} ${txtPlural}</h3><div class="resumo-lista">`;
-    Object.keys(contagem).sort().forEach(cond => {
-        html += `<div>• ${cond}: <strong>${contagem[cond]}</strong></div>`;
+    let html = `<h3>Resumo do Plantão: ${totalInicios} ${txtPlural}</h3><div class="resumo-lista">`;
+    Object.keys(condsInfo).sort().forEach(cond => {
+         let info = condsInfo[cond].resumo;
+         if (info.qtd > 0) {
+             html += `<div>• ${cond}: <strong>${info.qtd}</strong> <span style="font-size:12px; color:var(--cor-texto-mutado);">${info.mediaTexto}</span></div>`;
+         }
     });
     html += `</div>`;
     resumoDiv.innerHTML = html;
@@ -521,7 +574,8 @@ function atualizarTela() {
     document.getElementById('contador').innerText = registrosAtuais.length;
     
     // O resumo conta APENAS sobre o que está sendo exibido, mas sem o filtro de texto para não bugar a conta base
-    atualizarResumo(registros.filter(r => r.modo === modoAtual));
+    let todosRegistrosModo = registros.filter(r => r.modo === modoAtual);
+    atualizarResumo(todosRegistrosModo);
 
     let regsOrdenados = [...registrosAtuais].sort((a, b) => {
         if (modoOrdenacao === 'condominio') {
@@ -535,9 +589,35 @@ function atualizarTela() {
         }
     });
 
+    const duracoesCard = {}; 
+    const condsParaCalc = {};
+    todosRegistrosModo.forEach(r => {
+        if (!condsParaCalc[r.condominio]) condsParaCalc[r.condominio] = [];
+        condsParaCalc[r.condominio].push(r);
+    });
+    
+    Object.values(condsParaCalc).forEach(regs => {
+        let regsOrdenadosPorCondominio = [...regs].sort((a,b) => obterValorTempo(a.horario) - obterValorTempo(b.horario));
+        let inicio = null;
+        for (let reg of regsOrdenadosPorCondominio) {
+            if (reg.fase.startsWith('Início')) {
+                inicio = reg;
+            } else if (reg.fase.startsWith('Término') && inicio) {
+                let dur = calcularDuracaoMinutos(inicio.horario, reg.horario);
+                duracoesCard[reg.id] = formatarTempo(dur);
+                inicio = null;
+            }
+        }
+    });
+
     let htmlRenderizado = "";
     regsOrdenados.forEach(reg => {
         let classeFase = reg.fase.startsWith('Início') ? 'inicio' : 'termino';
+        let extraInfo = "";
+        if (classeFase === 'termino' && duracoesCard[reg.id]) {
+            extraInfo = `<p style="color: var(--cor-principal); font-size: 11px; margin-top:2px;">⏱️ Duração: <strong>${duracoesCard[reg.id]}</strong></p>`;
+        }
+        
         htmlRenderizado += `
             <div class="card-foto ${classeFase}">
                 <button class="btn-editar" onclick="abrirModalEdicao(${reg.id})" title="Editar">✏️</button>
@@ -547,6 +627,7 @@ function atualizarTela() {
                 <p>Agente: <strong>${reg.agente}</strong></p>
                 <p>⏰ <strong>${reg.horario}</strong></p>
                 <span class="badge-fase ${classeFase}">${reg.fase}</span>
+                ${extraInfo}
             </div>
         `;
     });
@@ -584,13 +665,47 @@ function gerarPDF() {
     let y = 35;
 
     // --- RESUMO NO PDF ---
-    const inicios = registrosAtuais.filter(r => r.fase.startsWith('Início'));
+    const condsInfo = {};
+    registrosAtuais.forEach(r => {
+        if (!condsInfo[r.condominio]) condsInfo[r.condominio] = [];
+        condsInfo[r.condominio].push(r);
+    });
+
     const contagem = {};
-    inicios.forEach(r => { contagem[r.condominio] = (contagem[r.condominio] || 0) + 1; });
-    const totalAcoes = inicios.length;
+    const medias = {};
+    const duracoesCardPDF = {}; 
+    let totalAcoes = 0;
+
+    Object.keys(condsInfo).forEach(cond => {
+        let regs = condsInfo[cond].sort((a,b) => obterValorTempo(a.horario) - obterValorTempo(b.horario));
+        let duracoes = [];
+        let inicio = null;
+        let qtd = 0;
+        for (let reg of regs) {
+            if (reg.fase.startsWith('Início')) {
+                inicio = reg;
+                qtd++;
+            } else if (reg.fase.startsWith('Término') && inicio) {
+                let dur = calcularDuracaoMinutos(inicio.horario, reg.horario);
+                duracoes.push(dur);
+                duracoesCardPDF[reg.id] = formatarTempo(dur);
+                inicio = null;
+            }
+        }
+        if (qtd > 0) {
+            contagem[cond] = qtd;
+            totalAcoes += qtd;
+            if (duracoes.length > 0) {
+                let soma = duracoes.reduce((a,b) => a+b, 0);
+                medias[cond] = formatarTempo(Math.round(soma / duracoes.length));
+            } else {
+                medias[cond] = "";
+            }
+        }
+    });
     
     const numeroDeAtivos = Object.keys(contagem).length;
-    let linhasPorColuna = Math.ceil(numeroDeAtivos / 3);
+    let linhasPorColuna = Math.ceil(numeroDeAtivos / 2);
     if (linhasPorColuna < 1) linhasPorColuna = 1;
     
     let alturaCaixa = 12 + (linhasPorColuna * 5);
@@ -605,10 +720,11 @@ function gerarPDF() {
     let colX = 15; let linhaY = y; let itemCount = 0;
     
     Object.keys(contagem).sort().forEach(cond => {
-        doc.text(`• ${cond}: ${contagem[cond]}`, colX, linhaY);
+        let textoMed = medias[cond] ? ` - Méd: ${medias[cond]}` : "";
+        doc.text(`• ${cond}: ${contagem[cond]}${textoMed}`, colX, linhaY);
         linhaY += 5; itemCount++;
         if (itemCount === linhasPorColuna) { 
-            colX += 60; 
+            colX += 90; 
             linhaY = y; 
             itemCount = 0; 
         }
@@ -642,9 +758,20 @@ function gerarPDF() {
 
         if (y > 260) { doc.addPage(); y = 20; colunaAtual = 0; }
         x = 15 + (colunaAtual * 65);
+        
         doc.setFontSize(9); doc.setFont("helvetica", "bold"); doc.text(`Agente: ${reg.agente}`, x, y);
-        doc.setFont("helvetica", "normal"); doc.text(`Fase: ${reg.fase}`, x, y + 4); doc.text(`Horário: ${reg.horario}`, x, y + 8);
-        doc.addImage(reg.foto, 'JPEG', x, y + 10, 50, 70);
+        doc.setFont("helvetica", "normal"); doc.text(`Fase: ${reg.fase}`, x, y + 4); 
+        doc.text(`Horário: ${reg.horario}`, x, y + 8);
+        
+        let startImgY = y + 10;
+        if (reg.fase.startsWith('Término') && duracoesCardPDF[reg.id]) {
+            doc.setFont("helvetica", "bold"); 
+            doc.text(`Duração: ${duracoesCardPDF[reg.id]}`, x, y + 12);
+            doc.setFont("helvetica", "normal");
+            startImgY = y + 14;
+        }
+        
+        doc.addImage(reg.foto, 'JPEG', x, startImgY, 50, 68);
         
         colunaAtual++;
         if (colunaAtual === 3) { colunaAtual = 0; y += 90; }
