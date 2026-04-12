@@ -1,6 +1,6 @@
 // Configurações e Estado Central
 const CONDOMINIOS = [
-    "Arosa", "Associação Master", "Baden", "Basel", "Bern", "Biel", "Botanico", "Davos", "Fribourg", 
+    "Arosa", "Associação Master", "Baden", "Basel", "Casarão", "Biel", "Botanico", "Davos", "Fribourg", 
     "Genebra", "Geneve", "Glarus", "La Vie", "Lauerz", "Lenk", "Lugano", "Luzern", 
     "Noville", "Office", "St. Moritz", "Vevey", "Villeneuve", "Zermatt", "Zurich"
 ];
