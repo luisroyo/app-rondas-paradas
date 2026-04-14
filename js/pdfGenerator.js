@@ -85,10 +85,11 @@ function gerarPDF() {
     
     Object.keys(contagem).sort().forEach(cond => {
         let textoMed = medias[cond] ? ` - Méd: ${medias[cond]}` : "";
-        doc.text(`• ${cond}: ${contagem[cond]}${textoMed}`, colX, linhaY);
+        // Limita a largura do texto do condomínio no resumo para evitar sobreposição
+        doc.text(`• ${cond}: ${contagem[cond]}${textoMed}`, colX, linhaY, { maxWidth: 85 });
         linhaY += 5; itemCount++;
         if (itemCount === linhasPorColuna) { 
-            colX += 90; 
+            colX += 95; // Aumentado de 90 para 95
             linhaY = y; 
             itemCount = 0; 
         }
@@ -111,7 +112,7 @@ function gerarPDF() {
     function renderHeaderCond(nome, posY) {
         doc.setFillColor(...corBg); doc.rect(10, posY - 6, 190, 10, 'F');
         doc.setFontSize(12); doc.setFont("helvetica", "bold"); doc.setTextColor(...corBase); 
-        doc.text(`RESIDENCIAL: ${nome}${modoAtual === 'parada' ? ' (Ponto Base)' : ''}`, 15, posY + 1);
+        doc.text(`RESIDENCIAL: ${nome}${modoAtual === 'parada' ? ' (Ponto Base)' : ''}`, 15, posY + 1, { maxWidth: 180 });
         doc.setTextColor(0, 0, 0);
     }
 
@@ -119,7 +120,7 @@ function gerarPDF() {
         let isNovoCondominio = (reg.condominio !== condominioAtual);
         
         if (isNovoCondominio && colunaAtual !== 0) { 
-            y += 90; 
+            y += 95; // Aumentado de 90 para 95
             colunaAtual = 0; 
         }
 
@@ -132,38 +133,42 @@ function gerarPDF() {
             y += 15;
             colunaAtual = 0;
         } else {
-            if (colunaAtual === 0 && y > 200) {
+            if (colunaAtual === 0 && y > 185) { // Reduzido de 200 para 185 para garantir que a foto caiba
                 doc.addPage(); y = 20;
                 renderHeaderCond(condominioAtual + " (Continuação)", y);
                 y += 15;
             }
         }
 
-        x = 15 + (colunaAtual * 65);
+        x = 15 + (colunaAtual * 95); // Aumentado de 65 para 95 para 2 colunas
         
-        doc.setFontSize(9); doc.setFont("helvetica", "bold"); doc.text(`Agente: ${reg.agente}`, x, y);
-        doc.setFont("helvetica", "normal"); doc.text(`Fase: ${reg.fase}`, x, y + 4); 
-        doc.text(`Horário: ${reg.horario}`, x, y + 8);
+        doc.setFontSize(9); doc.setFont("helvetica", "bold"); 
+        // Adicionado maxWidth para o nome do Agente
+        doc.text(`Agente: ${reg.agente}`, x, y, { maxWidth: 85 });
         
-        let startImgY = y + 10;
+        doc.setFont("helvetica", "normal"); 
+        doc.text(`Fase: ${reg.fase}`, x, y + 6); // Aumentado o espaçamento vertical
+        doc.text(`Horário: ${reg.horario}`, x, y + 10);
+        
+        let startImgY = y + 12;
         if (reg.fase.startsWith('Término') && duracoesCardPDF[reg.id]) {
             doc.setFont("helvetica", "bold"); 
-            doc.text(`Duração: ${duracoesCardPDF[reg.id]}`, x, y + 12);
+            doc.text(`Duração: ${duracoesCardPDF[reg.id]}`, x, y + 14);
             doc.setFont("helvetica", "normal");
-            startImgY = y + 14;
+            startImgY = y + 16;
         }
         
-        doc.addImage(reg.foto, 'JPEG', x, startImgY, 50, 68);
+        doc.addImage(reg.foto, 'JPEG', x, startImgY, 80, 75); // Aumentado o tamanho da foto (50x68 -> 80x75)
         
         colunaAtual++;
-        if (colunaAtual === 3) { 
+        if (colunaAtual === 2) { // Alterado de 3 para 2 colunas
             colunaAtual = 0; 
-            y += 90; 
+            y += 105; // Aumentado de 90 para 105 para acomodar fotos maiores
         }
     });
 
     // --- ASSINATURAS NO PDF ---
-    if (colunaAtual > 0) y += 90; 
+    if (colunaAtual > 0) y += 105; 
     if (y > 240) { doc.addPage(); y = 40; } else { y += 20; }
     
     doc.setDrawColor(0);
