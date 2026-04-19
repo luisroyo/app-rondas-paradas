@@ -48,10 +48,10 @@ body.dark-mode.tema-parada {
     --cor-resumo-bg: #00231f;
 }
 
-body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: var(--cor-fundo-body); margin: 0; padding: 20px; color: var(--cor-texto); transition: background-color 0.3s, color 0.3s; }
-.container { display: flex; gap: 20px; max-width: 1200px; margin: auto; }
-.painel-esquerdo { flex: 1; background: var(--cor-painel); padding: 20px; border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); height: fit-content; position: sticky; top: 20px; transition: all 0.3s; }
-.painel-direito { flex: 2; background: var(--cor-painel); padding: 20px; border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); transition: all 0.3s; }
+body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: var(--cor-fundo-body); margin: 0; padding: 20px; color: var(--cor-texto); transition: background-color 0.3s, color 0.3s; height: 100vh; box-sizing: border-box; overflow: hidden; }
+.container { display: flex; gap: 20px; max-width: 1200px; margin: auto; height: 100%; }
+.painel-esquerdo { flex: 1; background: var(--cor-painel); padding: 20px; border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); overflow-y: auto; transition: all 0.3s; }
+.painel-direito { flex: 2; background: var(--cor-painel); padding: 20px; border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); overflow-y: auto; transition: all 0.3s; }
 
 /* Cabeçalho Topo */
 .header-topo-esquerdo { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 20px;}
