@@ -25,14 +25,28 @@ window.onload = () => {
         });
     }
 
+    const turnoSelect = document.getElementById('turno');
     const supervisorInput = document.getElementById('supervisor');
+    
     if (supervisorInput) {
         supervisorInput.addEventListener('input', function() {
             localStorage.setItem('supervisor_salvo', this.value);
+            
+            const nome = this.value.toLowerCase().trim();
+            if (nome.includes('luis') || nome.includes('simone') || nome.includes('romel')) {
+                if (turnoSelect) {
+                    turnoSelect.value = 'Noturno (18:00 às 06:00)';
+                    localStorage.setItem('turno_salvo', turnoSelect.value);
+                }
+            } else if (nome.includes('arnaldo') || nome.includes('gleison')) {
+                if (turnoSelect) {
+                    turnoSelect.value = 'Diurno (06:00 às 18:00)';
+                    localStorage.setItem('turno_salvo', turnoSelect.value);
+                }
+            }
         });
     }
 
-    const turnoSelect = document.getElementById('turno');
     if (turnoSelect) {
         turnoSelect.addEventListener('change', function() {
             localStorage.setItem('turno_salvo', this.value);
