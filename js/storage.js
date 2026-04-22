@@ -76,6 +76,8 @@ function carregarDadosOffline() {
                 let cond = r.condominio;
                 if (cond === 'Genebra' || cond === 'Eco Villa Genebra' || cond === 'Eco Villas Genebra') {
                     cond = 'Eco Vila Genebra';
+                } else if (cond.toLowerCase() === 'casarão' || cond.toLowerCase() === 'casarao') {
+                    cond = 'Bern';
                 }
                 return {...r, condominio: cond, modo: r.modo || 'ronda'};
             });

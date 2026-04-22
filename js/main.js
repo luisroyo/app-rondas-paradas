@@ -77,6 +77,7 @@ function inserirDadosRapidos(texto) {
     texto = texto.replace(/eco\s*vill?[ea]s?(?:\s*genebra)?/gi, 'Eco Vila Genebra');
     texto = texto.replace(/\bgenebra\b/gi, 'Eco Vila Genebra');
     texto = texto.replace(/gen[eéè]ve/gi, 'Geneve');
+    texto = texto.replace(/casar[ãa]o/gi, 'Bern');
     
     const textoLow = texto.toLowerCase();
     const textoUpper = texto.toUpperCase();
