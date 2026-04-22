@@ -72,7 +72,13 @@ function carregarDadosOffline() {
     const request = store.get("lista_atual");
     request.onsuccess = function(event) {
         if (event.target.result) {
-            registros = event.target.result.map(r => ({...r, modo: r.modo || 'ronda'}));
+            registros = event.target.result.map(r => {
+                let cond = r.condominio;
+                if (cond === 'Genebra' || cond === 'Eco Villa Genebra' || cond === 'Eco Villas Genebra') {
+                    cond = 'Eco Vila Genebra';
+                }
+                return {...r, condominio: cond, modo: r.modo || 'ronda'};
+            });
             atualizarTela();
         }
     };

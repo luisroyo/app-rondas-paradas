@@ -38,6 +38,18 @@ function mudarModo(novoModo) {
         : '<option value="Início da Parada">Início da Parada</option><option value="Término da Parada">Término da Parada</option>';
     document.getElementById('edit-fase').innerHTML = optionsEditFase;
 
+    const selectCond = document.getElementById('condominio');
+    const editCond = document.getElementById('edit-condominio');
+    if (selectCond && editCond) {
+        selectCond.innerHTML = '<option value="">Selecione...</option>';
+        editCond.innerHTML = '<option value="">Selecione...</option>';
+        const listaCondominios = novoModo === 'ronda' ? CONDOMINIOS_RONDA : CONDOMINIOS_PARADA;
+        listaCondominios.forEach(cond => {
+            selectCond.appendChild(new Option(cond, cond));
+            editCond.appendChild(new Option(cond, cond));
+        });
+    }
+
     document.getElementById('condominio').value = '';
     document.getElementById('agente').value = localStorage.getItem('agente_salvo') || '';
     document.getElementById('horario').value = '';

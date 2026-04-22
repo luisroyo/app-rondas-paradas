@@ -3,12 +3,6 @@
 window.onload = () => {
     const selectCond = document.getElementById('condominio');
     const editCond = document.getElementById('edit-condominio');
-    if (selectCond && editCond) {
-        CONDOMINIOS.forEach(cond => {
-            selectCond.appendChild(new Option(cond, cond));
-            editCond.appendChild(new Option(cond, cond));
-        });
-    }
 
     // Restaurar Tema Escuro
     if (localStorage.getItem('darkMode') === 'true') {
@@ -80,7 +74,8 @@ function inserirDadosRapidos(texto) {
     // Normalização básica de texto
     texto = texto.replace(/st\.?\s*moritz/gi, 'St. Moritz');
     texto = texto.replace(/\bla\s*vie\b/gi, 'La Vie');
-    texto = texto.replace(/eco\s*vill?[ea]s?(?:\s*genebra)?/gi, 'Genebra');
+    texto = texto.replace(/eco\s*vill?[ea]s?(?:\s*genebra)?/gi, 'Eco Vila Genebra');
+    texto = texto.replace(/\bgenebra\b/gi, 'Eco Vila Genebra');
     
     const textoLow = texto.toLowerCase();
     const textoUpper = texto.toUpperCase();
@@ -92,7 +87,8 @@ function inserirDadosRapidos(texto) {
     }
     
     // 2. Condomínio
-    for (let cond of CONDOMINIOS) {
+    const listaCondominios = modoAtual === 'ronda' ? CONDOMINIOS_RONDA : CONDOMINIOS_PARADA;
+    for (let cond of listaCondominios) {
         let condSimplificado = cond.toUpperCase().replace('ASSOCIAÇÃO ', '');
         if (textoUpper.includes(cond.toUpperCase()) || textoUpper.includes(condSimplificado)) {
             document.getElementById('condominio').value = cond;
@@ -115,7 +111,7 @@ function inserirDadosRapidos(texto) {
         let linhaL = linha.toLowerCase();
         
         let achouCond = false;
-        for (let cond of CONDOMINIOS) {
+        for (let cond of listaCondominios) {
             let condS = cond.toLowerCase().replace('associação ', '');
             if (linhaL.includes(cond.toLowerCase()) || linhaL.includes(condS)) { achouCond = true; break; }
         }

@@ -1,9 +1,14 @@
 // Configurações e Estado Central
-const CONDOMINIOS = [
-    "Arosa", "Associação Master", "Baden", "Basel", "Casarão", "Biel", "Botanico", "Davos", "Fribourg", 
-    "Genebra", "Geneve", "Glarus", "La Vie", "Lauerz", "Lenk", "Lugano", "Luzern", 
+const CONDOMINIOS_RONDA = [
+    "Arosa", "Baden", "Basel", "Biel", "Davos", "Eco Vila Genebra", "Fribourg", "Glarus",
+    "La Vie", "Lauerz", "Lenk", "Lugano", "Luzern", "St. Moritz", "Vevey", "Zermatt"
+].sort();
+
+const CONDOMINIOS_PARADA = [
+    "Arosa", "Baden", "Basel", "Bern", "Biel", "Botânico", "Davos", "Eco Vila Genebra",
+    "Fribourg", "Geneve", "Glarus", "La Vie", "Lauerz", "Lenk", "Lugano", "Luzern",
     "Noville", "Office", "St. Moritz", "Vevey", "Villeneuve", "Zermatt", "Zurich"
-];
+].sort();
 
 let registros = [];
 let db;
