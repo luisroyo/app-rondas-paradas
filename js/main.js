@@ -1,4 +1,4 @@
-// Ponto de Entrada Principal e Orquestração
+﻿// Ponto de Entrada Principal e Orquestração
 
 window.onload = () => {
     const selectCond = document.getElementById('condominio');
@@ -99,7 +99,7 @@ function inserirDadosRapidos(texto) {
     }
     
     // 3. Fase
-    if (textoLow.includes('inicio') || textoLow.includes('início')) {
+    if (textoLow.includes('inicio') || textoLow.includes('início') || textoLow.includes('inicial')) {
         document.getElementById('faseRegistro').value = modoAtual === 'ronda' ? "Início da Ronda" : "Início da Parada";
     } else if (textoLow.includes('termino') || textoLow.includes('término') || textoLow.includes('fim')) {
         document.getElementById('faseRegistro').value = modoAtual === 'ronda' ? "Término da Ronda" : "Término da Parada";
@@ -119,7 +119,7 @@ function inserirDadosRapidos(texto) {
         }
         if (achouCond) continue;
         
-        if (/\b\d{2}:\d{2}\b/.test(linha) || linhaL.includes('inicio') || linhaL.includes('início') || linhaL.includes('termino') || linhaL.includes('término') || linhaL.includes('fim')) {
+        if (/\b\d{2}:\d{2}\b/.test(linha) || linhaL.includes('inicio') || linhaL.includes('início') || linhaL.includes('inicial') || linhaL.includes('termino') || linhaL.includes('término') || linhaL.includes('fim')) {
             continue;
         }
         
