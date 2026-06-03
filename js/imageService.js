@@ -42,7 +42,12 @@ function processarImagens(files) {
         }
         const reader = new FileReader();
         reader.onload = function(e) {
-            processarUmaImagem(e.target.result, file.name);
+            processarUmaImagem(e.target.result, file.name, {
+                condominio,
+                agente,
+                faseRegistro,
+                horario
+            });
         }
         reader.readAsDataURL(file);
     });
@@ -52,11 +57,11 @@ function processarImagens(files) {
     document.getElementById('faseRegistro').value = "";
 }
 
-function processarUmaImagem(src, nomeOriginal = 'imagem') {
-    const condominio = document.getElementById('condominio').value;
-    const agente = document.getElementById('agente').value.trim();
-    const faseRegistro = document.getElementById('faseRegistro').value;
-    const horario = document.getElementById('horario').value;
+function processarUmaImagem(src, nomeOriginal = 'imagem', dados = null) {
+    const condominio = dados ? dados.condominio : document.getElementById('condominio').value;
+    const agente = dados ? dados.agente : document.getElementById('agente').value.trim();
+    const faseRegistro = dados ? dados.faseRegistro : document.getElementById('faseRegistro').value;
+    const horario = dados ? dados.horario : document.getElementById('horario').value;
 
     const img = new Image();
     
@@ -181,13 +186,13 @@ if (dropArea) {
                 salvarNovoAgenteNoHistorico(agente);
                 
                 if (url.startsWith('data:image/')) {
-                    processarUmaImagem(url, "imagem_arrastada");
+                    processarUmaImagem(url, "imagem_arrastada", { condominio, agente, faseRegistro, horario });
                     document.getElementById('horario').value = "";
                     document.getElementById('faseRegistro').value = "";
                 } else if (url.startsWith('blob:')) {
                     alert(`⚠️ Não é possível arrastar fotos diretamente do WhatsApp Web devido a restrições de segurança do navegador.\n\n💡 Dica rápida: Você não precisa baixar a foto! Clique nela no WhatsApp, copie-a (botão direito -> Copiar Imagem ou Ctrl+C) e cole-a (Ctrl+V) em qualquer parte desta tela.`);
                 } else {
-                    processarUmaImagem(url, "imagem_url");
+                    processarUmaImagem(url, "imagem_url", { condominio, agente, faseRegistro, horario });
                     document.getElementById('horario').value = "";
                     document.getElementById('faseRegistro').value = "";
                 }
