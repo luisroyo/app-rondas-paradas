@@ -182,8 +182,15 @@ function gerarPDF() {
     const prefixo = modoAtual === 'ronda' ? 'Rondas' : 'Paradas';
     doc.save(`Relatorio_${prefixo}_${turno.split(' ')[0]}_${dataHoje.replace(/\//g, '-')}.pdf`);
 
+    // Gerar e baixar a planilha Excel automaticamente junto com o PDF
+    try {
+        gerarExcel();
+    } catch (err) {
+        console.error("Erro ao gerar a planilha Excel automática:", err);
+    }
+
     setTimeout(() => {
-        if (confirm("✅ Relatório gerado com sucesso!\n\nDeseja limpar a tela agora para o próximo plantão?")) {
+        if (confirm("✅ Relatório e planilha gerados com sucesso!\n\nDeseja limpar a tela agora para o próximo plantão?")) {
             limparFila();
         }
     }, 1500);

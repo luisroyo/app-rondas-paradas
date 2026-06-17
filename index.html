@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Relatórios Operacionais - Rondas e Paradas</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
     <link rel="stylesheet" href="style.css">
 </head>
 <body class="tema-ronda">
@@ -91,6 +92,7 @@
         </div>
 
         <button class="btn-acao btn-pdf" onclick="gerarPDF()">Baixar Relatório em PDF</button>
+        <button class="btn-acao btn-excel" onclick="gerarExcel()">Baixar Planilha Excel</button>
         <button class="btn-acao btn-limpar" onclick="limparFila()">🗑️ Limpar Fila Atual</button>
         
         <div class="status-salvamento" id="status-salvo"></div>
@@ -163,6 +165,7 @@
 <script src="js/ui.js"></script>
 <script src="js/imageService.js"></script>
 <script src="js/pdfGenerator.js"></script>
+<script src="js/excelGenerator.js"></script>
 <script src="js/main.js"></script>
 </body>
 </html>

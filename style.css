@@ -91,6 +91,8 @@ button.btn-acao:hover { background-color: var(--cor-hover); transform: translate
 
 .btn-pdf { background-color: #0f9d58; margin-top: 20px; }
 .btn-pdf:hover { background-color: #0b8043; }
+.btn-excel { background-color: #107c41; margin-top: 10px; }
+.btn-excel:hover { background-color: #0c5f32; }
 .btn-limpar { background-color: #ea4335 !important; margin-top: 10px; }
 .btn-limpar:hover { background-color: #c5221f !important; }
 .btn-alternar { background-color: #555; width: auto; padding: 8px 15px; font-size: 13px; }
