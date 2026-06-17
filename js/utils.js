@@ -26,7 +26,10 @@ function formatarTempo(minutos) {
 
 function normalizarAgente(agente) {
     if (!agente) return "";
-    return agente.toLowerCase().trim().replace(/\s+/g, ' ');
+    return agente.toLowerCase()
+                 .normalize("NFD")
+                 .replace(/[\u0300-\u036f]/g, "")
+                 .replace(/[^a-z0-9]/g, "");
 }
 
 // Logica de Validação de Fluxo (Início -> Término) por Agente
