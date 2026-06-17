@@ -33,28 +33,55 @@ function normalizarAgente(agente) {
 }
 
 // Logica de Validação de Fluxo (Início -> Término) por Agente
-function validarLogica(modo, cond, faseStr, ignoreId, agenteVal) {
+function validarLogica(modo, cond, faseStr, ignoreId, agenteVal, horarioVal) {
     if (!agenteVal) {
         const agenteInput = document.getElementById('agente');
         agenteVal = agenteInput ? agenteInput.value : "";
     }
-    const agenteNorm = normalizarAgente(agenteVal);
+    if (!horarioVal) {
+        const horarioInput = document.getElementById('horario');
+        horarioVal = horarioInput ? horarioInput.value : "";
+    }
+    
+    if (!horarioVal) {
+        // Se ainda não houver horário informado, não bloqueia a validação inicial
+        return true;
+    }
 
+    const agenteNorm = normalizarAgente(agenteVal);
+    const timeVal = obterValorTempo(horarioVal);
+
+    // Filtrar apenas registros do mesmo agente, condomínio e modo
     let regs = registros.filter(r => 
         r.modo === modo && 
         r.condominio === cond && 
         r.id !== ignoreId && 
         normalizarAgente(r.agente) === agenteNorm
     );
-    const inicios = regs.filter(r => r.fase.startsWith('Início')).length;
-    const terminos = regs.filter(r => r.fase.startsWith('Término')).length;
 
-    if (faseStr.startsWith('Início') && inicios > terminos) {
-        alert(`Erro: O agente "${agenteVal}" já possui um Início aberto sem Término para ${cond}.\n\nPor favor, lance o Término correspondente antes de iniciar um novo ciclo.`);
-        return false;
-    } else if (faseStr.startsWith('Término') && inicios <= terminos) {
-        alert(`Erro: Não há nenhum Início aberto para o agente "${agenteVal}" em ${cond}.\n\nVocê não pode lançar um Término sem antes lançar o Início.`);
-        return false;
+    // Filtrar registros com horário anterior ou igual ao do lançamento atual
+    let priorRegs = regs.filter(r => obterValorTempo(r.horario) <= timeVal);
+
+    // Ordenar os registros anteriores por horário cronologicamente
+    priorRegs.sort((a, b) => {
+        let ta = obterValorTempo(a.horario);
+        let tb = obterValorTempo(b.horario);
+        if (ta !== tb) return ta - tb;
+        return a.id - b.id;
+    });
+
+    const ultimoReg = priorRegs[priorRegs.length - 1];
+    const temInicioAberto = ultimoReg && ultimoReg.fase.startsWith('Início');
+
+    if (faseStr.startsWith('Início')) {
+        if (temInicioAberto) {
+            return confirm(`Atenção: O agente "${agenteVal}" já possui um Início aberto às ${ultimoReg.horario} para ${cond}.\n\nDeseja lançar este novo Início mesmo assim (ex: caso tenha esquecido de registrar o término do anterior)?`);
+        }
+    } else if (faseStr.startsWith('Término')) {
+        if (!temInicioAberto) {
+            const horaMsg = ultimoReg ? ` após as ${ultimoReg.horario}` : "";
+            return confirm(`Atenção: Não há nenhum Início aberto para o agente "${agenteVal}" em ${cond}${horaMsg}.\n\nDeseja lançar este Término mesmo assim?`);
+        }
     }
     return true;
 }

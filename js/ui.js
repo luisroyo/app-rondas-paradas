@@ -120,8 +120,8 @@ function salvarEdicao() {
     if (!ag || !hor) { alert("Preencha todos os campos!"); return; }
 
     const obj = registros.find(r => r.id === id);
-    if (obj.fase !== fase || obj.condominio !== cond || obj.agente !== ag) {
-        if (!validarLogica(obj.modo, cond, fase, id, ag)) return;
+    if (obj.fase !== fase || obj.condominio !== cond || obj.agente !== ag || obj.horario !== hor) {
+        if (!validarLogica(obj.modo, cond, fase, id, ag, hor)) return;
     }
 
     obj.condominio = cond;
