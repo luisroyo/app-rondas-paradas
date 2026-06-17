@@ -120,8 +120,8 @@ function salvarEdicao() {
     if (!ag || !hor) { alert("Preencha todos os campos!"); return; }
 
     const obj = registros.find(r => r.id === id);
-    if (obj.fase !== fase || obj.condominio !== cond) {
-        if (!validarLogica(obj.modo, cond, fase, id)) return;
+    if (obj.fase !== fase || obj.condominio !== cond || obj.agente !== ag) {
+        if (!validarLogica(obj.modo, cond, fase, id, ag)) return;
     }
 
     obj.condominio = cond;
@@ -166,18 +166,30 @@ function atualizarResumo(registrosAtuais) {
     let totalInicios = 0;
     Object.keys(condsInfo).forEach(cond => {
         let regs = condsInfo[cond].sort((a,b) => obterValorTempo(a.horario) - obterValorTempo(b.horario));
+        
+        // Agrupar por agente para pareamento correto de rondas simultâneas
+        const regsPorAgente = {};
+        regs.forEach(r => {
+            const agKey = normalizarAgente(r.agente);
+            if (!regsPorAgente[agKey]) regsPorAgente[agKey] = [];
+            regsPorAgente[agKey].push(r);
+        });
+
         let duracoes = [];
-        let inicio = null;
         let contagemInicios = 0;
-        for (let reg of regs) {
-            if (reg.fase.startsWith('Início')) {
-                inicio = reg;
-                contagemInicios++;
-            } else if (reg.fase.startsWith('Término') && inicio) {
-                duracoes.push(calcularDuracaoMinutos(inicio.horario, reg.horario));
-                inicio = null;
+
+        Object.values(regsPorAgente).forEach(agentRegs => {
+            let inicio = null;
+            for (let reg of agentRegs) {
+                if (reg.fase.startsWith('Início')) {
+                    inicio = reg;
+                    contagemInicios++;
+                } else if (reg.fase.startsWith('Término') && inicio) {
+                    duracoes.push(calcularDuracaoMinutos(inicio.horario, reg.horario));
+                    inicio = null;
+                }
             }
-        }
+        });
         
         let mediaTexto = "";
         if (duracoes.length > 0) {
@@ -253,16 +265,27 @@ function atualizarTela() {
     
     Object.values(condsParaCalc).forEach(regs => {
         let regsOrdenadosPorCondominio = [...regs].sort((a,b) => obterValorTempo(a.horario) - obterValorTempo(b.horario));
-        let inicio = null;
-        for (let reg of regsOrdenadosPorCondominio) {
-            if (reg.fase.startsWith('Início')) {
-                inicio = reg;
-            } else if (reg.fase.startsWith('Término') && inicio) {
-                let dur = calcularDuracaoMinutos(inicio.horario, reg.horario);
-                duracoesCard[reg.id] = formatarTempo(dur);
-                inicio = null;
+        
+        // Agrupar por agente para pareamento correto de rondas simultâneas
+        const regsPorAgente = {};
+        regsOrdenadosPorCondominio.forEach(r => {
+            const agKey = normalizarAgente(r.agente);
+            if (!regsPorAgente[agKey]) regsPorAgente[agKey] = [];
+            regsPorAgente[agKey].push(r);
+        });
+
+        Object.values(regsPorAgente).forEach(agentRegs => {
+            let inicio = null;
+            for (let reg of agentRegs) {
+                if (reg.fase.startsWith('Início')) {
+                    inicio = reg;
+                } else if (reg.fase.startsWith('Término') && inicio) {
+                    let dur = calcularDuracaoMinutos(inicio.horario, reg.horario);
+                    duracoesCard[reg.id] = formatarTempo(dur);
+                    inicio = null;
+                }
             }
-        }
+        });
     });
 
     let htmlRenderizado = "";

@@ -42,20 +42,33 @@ function gerarPDF() {
 
     Object.keys(condsInfo).forEach(cond => {
         let regs = condsInfo[cond].sort((a,b) => obterValorTempo(a.horario) - obterValorTempo(b.horario));
+        
+        // Agrupar por agente para pareamento correto de rondas simultâneas
+        const regsPorAgente = {};
+        regs.forEach(r => {
+            const agKey = normalizarAgente(r.agente);
+            if (!regsPorAgente[agKey]) regsPorAgente[agKey] = [];
+            regsPorAgente[agKey].push(r);
+        });
+
         let duracoes = [];
-        let inicio = null;
         let qtd = 0;
-        for (let reg of regs) {
-            if (reg.fase.startsWith('Início')) {
-                inicio = reg;
-                qtd++;
-            } else if (reg.fase.startsWith('Término') && inicio) {
-                let dur = calcularDuracaoMinutos(inicio.horario, reg.horario);
-                duracoes.push(dur);
-                duracoesCardPDF[reg.id] = formatarTempo(dur);
-                inicio = null;
+
+        Object.values(regsPorAgente).forEach(agentRegs => {
+            let inicio = null;
+            for (let reg of agentRegs) {
+                if (reg.fase.startsWith('Início')) {
+                    inicio = reg;
+                    qtd++;
+                } else if (reg.fase.startsWith('Término') && inicio) {
+                    let dur = calcularDuracaoMinutos(inicio.horario, reg.horario);
+                    duracoes.push(dur);
+                    duracoesCardPDF[reg.id] = formatarTempo(dur);
+                    inicio = null;
+                }
             }
-        }
+        });
+
         if (qtd > 0) {
             contagem[cond] = qtd;
             totalAcoes += qtd;

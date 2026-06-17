@@ -24,17 +24,33 @@ function formatarTempo(minutos) {
     return m > 0 ? `${h}h ${m}min` : `${h}h`;
 }
 
-// Logica de Validação de Fluxo (Início -> Término)
-function validarLogica(modo, cond, faseStr, ignoreId) {
-    let regs = registros.filter(r => r.modo === modo && r.condominio === cond && r.id !== ignoreId);
+function normalizarAgente(agente) {
+    if (!agente) return "";
+    return agente.toLowerCase().trim().replace(/\s+/g, ' ');
+}
+
+// Logica de Validação de Fluxo (Início -> Término) por Agente
+function validarLogica(modo, cond, faseStr, ignoreId, agenteVal) {
+    if (!agenteVal) {
+        const agenteInput = document.getElementById('agente');
+        agenteVal = agenteInput ? agenteInput.value : "";
+    }
+    const agenteNorm = normalizarAgente(agenteVal);
+
+    let regs = registros.filter(r => 
+        r.modo === modo && 
+        r.condominio === cond && 
+        r.id !== ignoreId && 
+        normalizarAgente(r.agente) === agenteNorm
+    );
     const inicios = regs.filter(r => r.fase.startsWith('Início')).length;
     const terminos = regs.filter(r => r.fase.startsWith('Término')).length;
 
     if (faseStr.startsWith('Início') && inicios > terminos) {
-        alert(`Erro: Você já possui um Início aberto sem Término para ${cond}.\n\nPor favor, lance o Término correspondente antes de iniciar um novo ciclo.`);
+        alert(`Erro: O agente "${agenteVal}" já possui um Início aberto sem Término para ${cond}.\n\nPor favor, lance o Término correspondente antes de iniciar um novo ciclo.`);
         return false;
     } else if (faseStr.startsWith('Término') && inicios <= terminos) {
-        alert(`Erro: Não há nenhum Início aberto para ${cond}.\n\nVocê não pode lançar um Término sem antes lançar o Início.`);
+        alert(`Erro: Não há nenhum Início aberto para o agente "${agenteVal}" em ${cond}.\n\nVocê não pode lançar um Término sem antes lançar o Início.`);
         return false;
     }
     return true;

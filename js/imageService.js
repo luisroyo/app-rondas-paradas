@@ -17,7 +17,7 @@ function processarImagens(files) {
         return;
     }
 
-    if (!validarLogica(modoAtual, condominio, faseRegistro, null)) {
+    if (!validarLogica(modoAtual, condominio, faseRegistro, null, agente)) {
         document.getElementById('fotos-input').value = "";
         return;
     }
@@ -174,7 +174,7 @@ if (dropArea) {
                     return;
                 }
 
-                if (!validarLogica(modoAtual, condominio, faseRegistro, null)) {
+                if (!validarLogica(modoAtual, condominio, faseRegistro, null, agente)) {
                     return;
                 }
 

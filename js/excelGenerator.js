@@ -89,53 +89,65 @@ function criarPlanilhaModo(modo, registrosModo, supervisor, turno, dataHoje) {
         // Ordenar os registros de cada condomínio por horário
         const regs = condsInfo[cond].sort((a, b) => obterValorTempo(a.horario) - obterValorTempo(b.horario));
 
-        // Calcular ciclos completos (Início -> Término)
-        const events = [];
-        let inicio = null;
+        // Agrupar por agente para pareamento correto de rondas simultâneas
+        const regsPorAgente = {};
+        regs.forEach(r => {
+            const agKey = normalizarAgente(r.agente);
+            if (!regsPorAgente[agKey]) regsPorAgente[agKey] = [];
+            regsPorAgente[agKey].push(r);
+        });
 
-        for (let reg of regs) {
-            if (reg.fase.startsWith('Início')) {
-                if (inicio) {
-                    // Registro de Início sem Término anterior (caso ocorra desvio de fluxo)
-                    events.push({
-                        inicio: inicio.horario,
-                        termino: "--",
-                        duracao: "--",
-                        agente: inicio.agente
-                    });
-                }
-                inicio = reg;
-            } else if (reg.fase.startsWith('Término')) {
-                if (inicio) {
-                    const dur = calcularDuracaoMinutos(inicio.horario, reg.horario);
-                    events.push({
-                        inicio: inicio.horario,
-                        termino: reg.horario,
-                        duracao: formatarTempo(dur),
-                        agente: reg.agente
-                    });
-                    inicio = null;
-                } else {
-                    // Registro de Término sem Início correspondente
-                    events.push({
-                        inicio: "--",
-                        termino: reg.horario,
-                        duracao: "--",
-                        agente: reg.agente
-                    });
+        // Calcular ciclos por agente
+        let events = [];
+        Object.values(regsPorAgente).forEach(agentRegs => {
+            let inicio = null;
+            for (let reg of agentRegs) {
+                if (reg.fase.startsWith('Início')) {
+                    if (inicio) {
+                        events.push({
+                            inicio: inicio.horario,
+                            termino: "--",
+                            duracao: "--",
+                            agente: inicio.agente
+                        });
+                    }
+                    inicio = reg;
+                } else if (reg.fase.startsWith('Término')) {
+                    if (inicio) {
+                        const dur = calcularDuracaoMinutos(inicio.horario, reg.horario);
+                        events.push({
+                            inicio: inicio.horario,
+                            termino: reg.horario,
+                            duracao: formatarTempo(dur),
+                            agente: reg.agente
+                        });
+                        inicio = null;
+                    } else {
+                        events.push({
+                            inicio: "--",
+                            termino: reg.horario,
+                            duracao: "--",
+                            agente: reg.agente
+                        });
+                    }
                 }
             }
-        }
+            if (inicio) {
+                events.push({
+                    inicio: inicio.horario,
+                    termino: "--",
+                    duracao: "--",
+                    agente: inicio.agente
+                });
+            }
+        });
 
-        // Se sobrou um Início aberto no final
-        if (inicio) {
-            events.push({
-                inicio: inicio.horario,
-                termino: "--",
-                duracao: "--",
-                agente: inicio.agente
-            });
-        }
+        // Ordenar os eventos gerados cronologicamente pelo horário de início/término
+        events.sort((a, b) => {
+            const tempoA = a.inicio !== "--" ? obterValorTempo(a.inicio) : obterValorTempo(a.termino);
+            const tempoB = b.inicio !== "--" ? obterValorTempo(b.inicio) : obterValorTempo(b.termino);
+            return tempoA - tempoB;
+        });
 
         // Se houver eventos processados para este condomínio
         if (events.length > 0) {
