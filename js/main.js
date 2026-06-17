@@ -72,7 +72,7 @@ function inserirDadosRapidos(texto) {
     if (!texto || !texto.trim()) return;
     
     // Normalização básica de texto
-    texto = texto.replace(/st\.?\s*moritz/gi, 'St. Moritz');
+    texto = texto.replace(/st\.?\s*moriti?[zs]/gi, 'St. Moritz');
     texto = texto.replace(/\bla\s*vie\b/gi, 'La Vie');
     texto = texto.replace(/eco\s*vill?[ea]s?(?:\s*genebra)?/gi, 'Eco Vila Genebra');
     texto = texto.replace(/\bgenebra\b/gi, 'Eco Vila Genebra');
