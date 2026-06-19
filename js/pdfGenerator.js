@@ -195,16 +195,60 @@ function gerarPDF() {
     const prefixo = modoAtual === 'ronda' ? 'Rondas' : 'Paradas';
     doc.save(`Relatorio_${prefixo}_${turno.split(' ')[0]}_${dataHoje.replace(/\//g, '-')}.pdf`);
 
-    // Gerar e baixar a planilha Excel automaticamente junto com o PDF
-    try {
-        gerarExcel();
-    } catch (err) {
-        console.error("Erro ao gerar a planilha Excel automática:", err);
+    // Integração silenciosa com a nuvem (Google Drive)
+    const nuvemAtiva = localStorage.getItem('nuvem_ativa') === 'true';
+    const webhookUrl = localStorage.getItem('webhook_url');
+
+    if (nuvemAtiva && webhookUrl) {
+        mostrarAvisoSalvo("☁️ Salvando no Google Drive...");
+        try {
+            const supervisorNomeLimpo = supervisor.trim().replace(/\s+/g, '_');
+            const pdfNome = `Relatorio_${supervisorNomeLimpo}_${modoAtual}_${dataHoje.replace(/\//g, '-')}.pdf`;
+            const excelNome = `Relatorio_${supervisorNomeLimpo}_${modoAtual}_${dataHoje.replace(/\//g, '-')}.xlsx`;
+            
+            // Obter PDF em Base64
+            const pdfBase64 = doc.output('datauristring').split(',')[1];
+            
+            // Obter Excel em Base64
+            const excelBase64 = obterExcelBase64(modoAtual);
+            
+            // Montar o payload
+            const payload = {
+                pdfName: pdfNome,
+                pdfData: pdfBase64,
+                excelName: excelNome,
+                excelData: excelBase64
+            };
+            
+            fetch(webhookUrl, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'text/plain'
+                },
+                body: JSON.stringify(payload)
+            })
+            .then(res => res.json())
+            .then(data => {
+                if (data.status === 'success') {
+                    mostrarAvisoSalvo("☁️ PDF e Excel salvos no Google Drive!");
+                } else {
+                    mostrarAvisoSalvo("⚠️ Falha ao salvar no Drive: " + data.message);
+                }
+            })
+            .catch(err => {
+                console.error("Erro de requisição da nuvem:", err);
+                mostrarAvisoSalvo("⚠️ Erro de rede ao salvar no Drive");
+            });
+        } catch (err) {
+            console.error("Erro ao preparar dados da nuvem:", err);
+            mostrarAvisoSalvo("⚠️ Erro ao salvar arquivos na nuvem");
+        }
     }
 
     setTimeout(() => {
-        if (confirm("✅ Relatório e planilha gerados com sucesso!\n\nDeseja limpar a tela agora para o próximo plantão?")) {
-            limparFila();
-        }
-    }, 1500);
+        const mensagem = nuvemAtiva 
+            ? "✅ Relatório em PDF gerado e enviado para a nuvem com sucesso!"
+            : "✅ Relatório em PDF gerado com sucesso!";
+        alert(mensagem);
+    }, 500);
 }

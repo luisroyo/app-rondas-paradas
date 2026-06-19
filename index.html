@@ -19,6 +19,7 @@
 
             </div>
             <div class="toggle-container">
+                <button id="btn-config" class="btn-settings-icon" onclick="abrirModalConfig()" title="Configurações de Salvamento">⚙️</button>
                 <label class="switch" title="Ativar Modo Noturno">
                     <input type="checkbox" id="toggle-dark-mode" onchange="alternarModoNoturno()">
                     <span class="slider round"></span>
@@ -92,7 +93,10 @@
         </div>
 
         <button class="btn-acao btn-pdf" onclick="gerarPDF()">Baixar Relatório em PDF</button>
-        <button class="btn-acao btn-excel" onclick="gerarExcel()">Baixar Planilha Excel</button>
+        <div class="excel-buttons-row">
+            <button class="btn-acao btn-excel" onclick="gerarExcel('ronda')">Excel Rondas</button>
+            <button class="btn-acao btn-excel btn-excel-parada" onclick="gerarExcel('parada')">Excel Paradas</button>
+        </div>
         <button class="btn-acao btn-limpar" onclick="limparFila()">🗑️ Limpar Fila Atual</button>
         
         <div class="status-salvamento" id="status-salvo"></div>
@@ -149,6 +153,52 @@
         <div class="form-row" style="margin-top:20px;">
             <button class="btn-acao" style="background-color: var(--cor-principal);" onclick="salvarEdicao()">Aplicar Alterações</button>
             <button class="btn-acao" style="background-color: #666;" onclick="fecharModalEdicao()">Cancelar</button>
+        </div>
+    </div>
+</div>
+
+<!-- Modal de Configurações -->
+<div id="modal-configuracoes" class="modal-overlay">
+    <div class="modal-content modal-largo">
+        <h3>⚙️ Configurações de Integração</h3>
+        
+        <div class="form-group" style="margin-top: 15px;">
+            <label class="switch-label" style="display: flex; align-items: center; gap: 10px; cursor: pointer; font-weight: normal;">
+                <input type="checkbox" id="config-nuvem-ativa" onchange="alternarCamposNuvem()" style="width: auto; margin-right: 5px;">
+                <span>Salvar relatórios no Google Drive automaticamente ao gerar PDF</span>
+            </label>
+        </div>
+        
+        <div id="campos-nuvem" style="display: none; border: 1px solid var(--cor-borda); padding: 15px; border-radius: 6px; margin-top: 15px; background: rgba(128, 128, 128, 0.05);">
+            <div class="form-group">
+                <label>URL do Web App do Google Apps Script:</label>
+                <input type="text" id="config-webhook-url" placeholder="https://script.google.com/macros/s/.../exec">
+            </div>
+            
+            <div style="font-size: 12px; color: var(--cor-texto-mutado); line-height: 1.4; margin-top: 10px; text-align: left;">
+                💡 <strong>Como funciona?</strong> Ao clicar em "Gerar PDF", o app enviará silenciosamente o PDF e o XLSX para este Web App, que os salvará no seu Google Drive.
+                <br>
+                <a href="#" onclick="exibirInstrucoesAppsScript(event)" style="color: var(--cor-principal); font-weight: bold; text-decoration: underline; display: inline-block; margin-top: 5px;">Ver código do script para colar no Google Drive</a>
+            </div>
+        </div>
+
+        <div id="instrucoes-script" style="display: none; border: 1px solid var(--cor-borda); padding: 15px; border-radius: 6px; margin-top: 15px; background: var(--cor-fundo-area); max-height: 200px; overflow-y: auto;">
+            <p style="margin-top: 0; font-weight: bold; font-size: 13px; text-align: left;">Passos para configurar:</p>
+            <ol style="padding-left: 20px; font-size: 12px; color: var(--cor-texto-mutado); margin-bottom: 10px; text-align: left;">
+                <li>Acesse o <a href="https://script.google.com" target="_blank" style="color: var(--cor-principal);">Google Apps Script</a> e clique em <strong>Novo Projeto</strong>.</li>
+                <li>Cole o código abaixo substituindo todo o conteúdo.</li>
+                <li>Clique em <strong>Implantar > Nova implantação</strong>.</li>
+                <li>Selecione <strong>Configuração (Engrenagem) > App da Web</strong>.</li>
+                <li>Em "Quem pode acessar", selecione <strong>Qualquer pessoa</strong>.</li>
+                <li>Clique em <strong>Implantar</strong>, autorize o acesso e copie o <strong>URL do App da Web</strong>.</li>
+            </ol>
+            <pre id="codigo-apps-script-exemplo" style="background: var(--cor-painel); padding: 10px; border-radius: 4px; font-size: 11px; font-family: monospace; overflow-x: auto; white-space: pre-wrap; word-break: break-all; border: 1px solid var(--cor-borda); color: var(--cor-texto); text-align: left;"></pre>
+            <button class="btn-acao" onclick="copiarCodigoScript()" style="padding: 6px 12px; font-size: 12px; width: auto; background-color: var(--cor-principal); margin-top: 5px;">Copiar Código</button>
+        </div>
+        
+        <div class="form-row" style="margin-top:25px; margin-bottom: 0;">
+            <button class="btn-acao" style="background-color: var(--cor-principal);" onclick="salvarConfiguracoes()">Salvar Configurações</button>
+            <button class="btn-acao" style="background-color: #666;" onclick="fecharModalConfig()">Fechar</button>
         </div>
     </div>
 </div>

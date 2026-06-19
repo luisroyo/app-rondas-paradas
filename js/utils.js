@@ -26,10 +26,39 @@ function formatarTempo(minutos) {
 
 function normalizarAgente(agente) {
     if (!agente) return "";
-    return agente.toLowerCase()
-                 .normalize("NFD")
-                 .replace(/[\u0300-\u036f]/g, "")
-                 .replace(/[^a-z0-9]/g, "");
+    const Lower = agente.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+    
+    // Procura por termos como "condutor:", "condutora:", "condutor ", "condutora " para extrair o nome
+    const match = agente.match(/(?:condutor|condutora)\s*:\s*([^/]+)/i) || 
+                  agente.match(/(?:condutor|condutora)\s+([^/]+)/i);
+    if (match) {
+        let nome = match[1].trim();
+        nome = nome.replace(/condominio.*/i, "")
+                   .replace(/residencial.*/i, "")
+                   .replace(/iniciando.*/i, "")
+                   .replace(/terminando.*/i, "")
+                   .trim();
+        let nomeLimpo = nome.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/[^a-z]/g, "");
+        if (nomeLimpo.length >= 3) {
+            return nomeLimpo;
+        }
+    }
+    
+    // Se não achar nome de condutor válido com 3+ letras, usa a normalização sem termos de ruído
+    let s = Lower.replace(/\bvtr\b/g, "")
+                 .replace(/\bcondutor\b/g, "")
+                 .replace(/\bcondutora\b/g, "")
+                 .replace(/\bsetor\b/g, "")
+                 .replace(/\biniciando\b/g, "")
+                 .replace(/\bterminando\b/g, "")
+                 .replace(/\bronda\b/g, "")
+                 .replace(/\bparada\b/g, "")
+                 .replace(/\bcondominio\b/g, "")
+                 .replace(/\bresidencial\b/g, "");
+                 
+    s = s.replace(/\b\d{2}:\d{2}\b/g, "");
+    s = s.replace(/\b\d{4}\b/g, ""); // Remove números de 4 dígitos (ex: horários sem dois-pontos)
+    return s.replace(/[^a-z0-9]/g, "");
 }
 
 // Logica de Validação de Fluxo (Início -> Término) por Agente

@@ -91,8 +91,12 @@ button.btn-acao:hover { background-color: var(--cor-hover); transform: translate
 
 .btn-pdf { background-color: #0f9d58; margin-top: 20px; }
 .btn-pdf:hover { background-color: #0b8043; }
-.btn-excel { background-color: #107c41; margin-top: 10px; }
-.btn-excel:hover { background-color: #0c5f32; }
+.excel-buttons-row { display: flex; gap: 10px; margin-top: 10px; width: 100%; }
+.excel-buttons-row button { margin-top: 0 !important; flex: 1; }
+.btn-excel { background-color: #1a73e8; }
+.btn-excel:hover { background-color: #1557b0; }
+.btn-excel-parada { background-color: #00796b !important; }
+.btn-excel-parada:hover { background-color: #004d40 !important; }
 .btn-limpar { background-color: #ea4335 !important; margin-top: 10px; }
 .btn-limpar:hover { background-color: #c5221f !important; }
 .btn-alternar { background-color: #555; width: auto; padding: 8px 15px; font-size: 13px; }
@@ -136,3 +140,12 @@ button.btn-acao:hover { background-color: var(--cor-hover); transform: translate
 .toast-visivel { bottom: 20px; }
 .toast-escondido button { background: transparent; border: 1px solid #fbbc05; color: #fbbc05; padding: 5px 10px; border-radius: 4px; cursor: pointer; font-weight: bold; }
 .toast-escondido button:hover { background: #fbbc05; color: #323232; }
+
+/* Configurações Adicionais */
+.btn-settings-icon { background: transparent; border: none; font-size: 20px; cursor: pointer; transition: transform 0.2s; padding: 0; margin-right: 12px; display: flex; align-items: center; color: var(--cor-texto-mutado); }
+.btn-settings-icon:hover { transform: rotate(45deg); color: var(--cor-principal); }
+.modal-largo { width: 600px !important; max-width: 95% !important; }
+body.dark-mode #instrucoes-script { background: #1a1a1a; }
+body.dark-mode #campos-nuvem { background: rgba(255, 255, 255, 0.02); }
+#instrucoes-script a { text-decoration: underline; }
+

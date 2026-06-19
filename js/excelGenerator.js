@@ -1,12 +1,11 @@
 // Geração de Relatórios em Excel (.xlsx) usando a biblioteca SheetJS
 
-function gerarExcel() {
-    // Filtrar registros globais
-    const registrosRonda = registros.filter(r => r.modo === 'ronda');
-    const registrosParada = registros.filter(r => r.modo === 'parada');
+function gerarExcel(modo = modoAtual) {
+    const registrosModo = registros.filter(r => r.modo === modo);
+    const labelModo = modo === 'ronda' ? 'Rondas' : 'Paradas';
 
-    if (registrosRonda.length === 0 && registrosParada.length === 0) {
-        alert("Adicione fotografias ou registros para gerar a planilha Excel.");
+    if (registrosModo.length === 0) {
+        alert(`Não há registros de ${labelModo} para gerar a planilha Excel.`);
         return;
     }
 
@@ -28,20 +27,40 @@ function gerarExcel() {
     // Criar o Workbook (Livro Excel)
     const wb = XLSX.utils.book_new();
 
-    // 1. Planilha de Rondas
-    const wsRondas = criarPlanilhaModo('ronda', registrosRonda, supervisor, turno, dataHoje);
-    XLSX.utils.book_append_sheet(wb, wsRondas, 'Rondas');
+    // Criar apenas a planilha do modo solicitado
+    const ws = criarPlanilhaModo(modo, registrosModo, supervisor, turno, dataHoje);
+    XLSX.utils.book_append_sheet(wb, ws, labelModo);
 
-    // 2. Planilha de Paradas
-    const wsParadas = criarPlanilhaModo('parada', registrosParada, supervisor, turno, dataHoje);
-    XLSX.utils.book_append_sheet(wb, wsParadas, 'Paradas');
-
-    // Nome do arquivo baseado no modo ativo para manter coerência com o PDF
-    const prefixo = modoAtual === 'ronda' ? 'Rondas' : 'Paradas';
-    const nomeArquivo = `Relatorio_${prefixo}_${turno.split(' ')[0]}_${dataHoje.replace(/\//g, '-')}.xlsx`;
+    // Formatar nome do arquivo: Relatorio_[Supervisor]_[tipo]_[data].xlsx
+    const supervisorNomeLimpo = supervisor.trim().replace(/\s+/g, '_');
+    const nomeArquivo = `Relatorio_${supervisorNomeLimpo}_${modo}_${dataHoje.replace(/\//g, '-')}.xlsx`;
 
     // Salvar o arquivo Excel
     XLSX.writeFile(wb, nomeArquivo);
+}
+
+// Retorna o Excel em base64 (usado para o envio silencioso em nuvem)
+function obterExcelBase64(modo) {
+    const registrosModo = registros.filter(r => r.modo === modo);
+    const supervisor = document.getElementById('supervisor').value || "Não informado";
+    const turno = document.getElementById('turno').value;
+    
+    let dataRelatorio = new Date();
+    if (turno.includes('Noturno') && dataRelatorio.getHours() < 12) {
+        dataRelatorio.setDate(dataRelatorio.getDate() - 1);
+    }
+    const dataHoje = dataRelatorio.toLocaleDateString('pt-BR');
+
+    if (!window.XLSX || registrosModo.length === 0) {
+        return "";
+    }
+
+    const wb = XLSX.utils.book_new();
+    const ws = criarPlanilhaModo(modo, registrosModo, supervisor, turno, dataHoje);
+    const labelModo = modo === 'ronda' ? 'Rondas' : 'Paradas';
+    XLSX.utils.book_append_sheet(wb, ws, labelModo);
+
+    return XLSX.write(wb, { bookType: 'xlsx', type: 'base64' });
 }
 
 function criarPlanilhaModo(modo, registrosModo, supervisor, turno, dataHoje) {

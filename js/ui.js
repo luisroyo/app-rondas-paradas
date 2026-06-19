@@ -312,3 +312,130 @@ function atualizarTela() {
     
     grid.innerHTML = htmlRenderizado;
 }
+
+// Funções do Modal de Configurações e Integração Cloud
+const GOOGLE_APPS_SCRIPT_TEMPLATE = `function doPost(e) {
+  try {
+    var data = JSON.parse(e.postData.contents);
+    var folderName = "Relatórios Rondas e Paradas";
+    var folders = DriveApp.getFoldersByName(folderName);
+    var folder;
+    
+    if (folders.hasNext()) {
+      folder = folders.next();
+    } else {
+      folder = DriveApp.createFolder(folderName);
+    }
+    
+    var resultados = [];
+    
+    if (data.pdfData && data.pdfName) {
+      var pdfBlob = Utilities.newBlob(Utilities.base64Decode(data.pdfData), 'application/pdf', data.pdfName);
+      var pdfFile = folder.createFile(pdfBlob);
+      resultados.push("PDF salvo: " + pdfFile.getName());
+    }
+    
+    if (data.excelData && data.excelName) {
+      var excelBlob = Utilities.newBlob(
+        Utilities.base64Decode(data.excelData), 
+        'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet', 
+        data.excelName
+      );
+      var excelFile = folder.createFile(excelBlob);
+      resultados.push("XLSX salvo: " + excelFile.getName());
+    }
+    
+    return ContentService.createTextOutput(JSON.stringify({
+      status: 'success', 
+      message: 'Relatórios salvos no Google Drive!',
+      details: resultados
+    })).setMimeType(ContentService.MimeType.JSON);
+    
+  } catch (error) {
+    return ContentService.createTextOutput(JSON.stringify({
+      status: 'error', 
+      message: error.toString()
+    })).setMimeType(ContentService.MimeType.JSON);
+  }
+}`;
+
+function abrirModalConfig() {
+    const modal = document.getElementById('modal-configuracoes');
+    if (!modal) return;
+    
+    modal.style.display = 'flex';
+    
+    // Carregar valores atuais
+    const nuvemAtiva = localStorage.getItem('nuvem_ativa') === 'true';
+    const webhookUrl = localStorage.getItem('webhook_url') || '';
+    
+    document.getElementById('config-nuvem-ativa').checked = nuvemAtiva;
+    document.getElementById('config-webhook-url').value = webhookUrl;
+    
+    // Configurar o código de visualização do script
+    const pre = document.getElementById('codigo-apps-script-exemplo');
+    if (pre) {
+        pre.textContent = GOOGLE_APPS_SCRIPT_TEMPLATE;
+    }
+    
+    alternarCamposNuvem();
+}
+
+function fecharModalConfig() {
+    const modal = document.getElementById('modal-configuracoes');
+    if (modal) modal.style.display = 'none';
+}
+
+function alternarCamposNuvem() {
+    const ativa = document.getElementById('config-nuvem-ativa').checked;
+    const campos = document.getElementById('campos-nuvem');
+    if (campos) {
+        campos.style.display = ativa ? 'block' : 'none';
+    }
+    if (!ativa) {
+        const inst = document.getElementById('instrucoes-script');
+        if (inst) inst.style.display = 'none';
+    }
+}
+
+function exibirInstrucoesAppsScript(event) {
+    if (event) event.preventDefault();
+    const inst = document.getElementById('instrucoes-script');
+    if (inst) {
+        inst.style.display = inst.style.display === 'none' ? 'block' : 'none';
+        if (inst.style.display === 'block') {
+            // Rolar até o final para mostrar as instruções
+            setTimeout(() => {
+                inst.scrollIntoView({ behavior: 'smooth', block: 'end' });
+            }, 100);
+        }
+    }
+}
+
+function copiarCodigoScript() {
+    navigator.clipboard.writeText(GOOGLE_APPS_SCRIPT_TEMPLATE)
+        .then(() => {
+            alert("Código do Google Apps Script copiado para a área de transferência!");
+        })
+        .catch(err => {
+            console.error("Falha ao copiar:", err);
+            alert("Não foi possível copiar automaticamente. Selecione o texto e copie manualmente.");
+        });
+}
+
+function salvarConfiguracoes() {
+    const ativa = document.getElementById('config-nuvem-ativa').checked;
+    const url = document.getElementById('config-webhook-url').value.trim();
+    
+    if (ativa && !url) {
+        alert("Por favor, informe a URL do Web App do Google Apps Script!");
+        return;
+    }
+    
+    localStorage.setItem('nuvem_ativa', ativa ? 'true' : 'false');
+    localStorage.setItem('webhook_url', url);
+    
+    fecharModalConfig();
+    mostrarAvisoSalvo("⚙️ Configurações salvas!");
+}
+

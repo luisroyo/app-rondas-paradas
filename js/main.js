@@ -78,6 +78,8 @@ function inserirDadosRapidos(texto) {
     texto = texto.replace(/\bgenebra\b/gi, 'Eco Vila Genebra');
     texto = texto.replace(/gen[eéè]ve/gi, 'Geneve');
     texto = texto.replace(/casar[ãa]o/gi, 'Bern');
+    texto = texto.replace(/z[üu]rich/gi, 'Zurich');
+    texto = texto.replace(/vil+eneuve/gi, 'Villeneuve');
     
     const textoLow = texto.toLowerCase();
     const textoUpper = texto.toUpperCase();
@@ -99,9 +101,9 @@ function inserirDadosRapidos(texto) {
     }
     
     // 3. Fase
-    if (textoLow.includes('inicio') || textoLow.includes('início') || textoLow.includes('inicial') || textoLow.includes('lnicial')) {
+    if (textoLow.includes('inicio') || textoLow.includes('início') || textoLow.includes('inicial') || textoLow.includes('lnicial') || textoLow.includes('inician')) {
         document.getElementById('faseRegistro').value = modoAtual === 'ronda' ? "Início da Ronda" : "Início da Parada";
-    } else if (textoLow.includes('termino') || textoLow.includes('término') || textoLow.includes('fim') || textoLow.includes('final')) {
+    } else if (textoLow.includes('termino') || textoLow.includes('término') || textoLow.includes('fim') || textoLow.includes('final') || textoLow.includes('terminan')) {
         document.getElementById('faseRegistro').value = modoAtual === 'ronda' ? "Término da Ronda" : "Término da Parada";
     }
     
@@ -112,21 +114,38 @@ function inserirDadosRapidos(texto) {
     for (let linha of linhas) {
         let linhaL = linha.toLowerCase();
         
-        let achouCond = false;
+        // Em vez de descartar a linha que cita o condomínio, vamos apenas limpar o nome dele
+        // para preservar a informação do agente se estiver na mesma linha
         for (let cond of listaCondominios) {
             let condS = cond.toLowerCase().replace('associação ', '');
-            if (linhaL.includes(cond.toLowerCase()) || linhaL.includes(condS)) { achouCond = true; break; }
+            if (linhaL.includes(cond.toLowerCase()) || linhaL.includes(condS)) {
+                linha = linha.replace(new RegExp(cond, 'gi'), '');
+                linha = linha.replace(new RegExp(condS, 'gi'), '');
+                linha = linha.replace(/(?:condomínio|residencial|associação)\s*(?:residencial)?\s*:?/gi, '');
+                linhaL = linha.toLowerCase();
+            }
         }
-        if (achouCond) continue;
         
+        // Limpar possíveis delimitadores extras resultantes da limpeza
+        linha = linha.replace(/^[/\s:-]+|[/\s:-]+$/g, '').trim();
+        
+        // Se a linha ficou vazia (ex: continha apenas o nome do condomínio), ignora
+        if (linha.replace(/[^a-zA-Z0-9]/g, '').trim() === '') {
+            continue;
+        }
+        
+        // Ignorar linhas com horários ou descrições de fase/ronda
         if (
             /\b\d{2}:\d{2}\b/.test(linha) || 
             linhaL.includes('inicio') || 
             linhaL.includes('início') || 
             linhaL.includes('inicial') || 
             linhaL.includes('lnicial') ||
+            linhaL.includes('inician') ||
             linhaL.includes('termino') || 
             linhaL.includes('término') || 
+            linhaL.includes('terminan') ||
+            linhaL.includes('ronda') ||
             linhaL.includes('fim') || 
             linhaL.includes('final') || 
             linhaL.includes('parada')
