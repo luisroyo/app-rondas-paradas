@@ -226,7 +226,8 @@ function gerarPDF() {
                 pdfName: pdfNome,
                 pdfData: pdfBase64,
                 excelName: excelNome,
-                excelData: excelBase64
+                excelData: excelBase64,
+                supervisor: supervisor
             };
             
             fetch(webhookUrl, {

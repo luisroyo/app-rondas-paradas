@@ -335,21 +335,37 @@ function atualizarTela() {
 const GOOGLE_APPS_SCRIPT_TEMPLATE = `function doPost(e) {
   try {
     var data = JSON.parse(e.postData.contents);
-    var folderName = "Relatórios Rondas e Paradas";
-    var folders = DriveApp.getFoldersByName(folderName);
-    var folder;
     
-    if (folders.hasNext()) {
-      folder = folders.next();
+    // 1. Pasta principal
+    var mainFolderName = "Relatórios Rondas e Paradas";
+    var mainFolders = DriveApp.getFoldersByName(mainFolderName);
+    var mainFolder;
+    if (mainFolders.hasNext()) {
+      mainFolder = mainFolders.next();
     } else {
-      folder = DriveApp.createFolder(folderName);
+      mainFolder = DriveApp.createFolder(mainFolderName);
+    }
+    
+    // 2. Subpasta do Supervisor (caso esteja informado)
+    var targetFolder = mainFolder;
+    var supervisorName = data.supervisor ? data.supervisor.trim() : "Não Informado";
+    if (supervisorName) {
+      // Normaliza o nome do supervisor (primeira letra maiúscula)
+      supervisorName = supervisorName.charAt(0).toUpperCase() + supervisorName.slice(1);
+      
+      var subFolders = mainFolder.getFoldersByName(supervisorName);
+      if (subFolders.hasNext()) {
+        targetFolder = subFolders.next();
+      } else {
+        targetFolder = mainFolder.createFolder(supervisorName);
+      }
     }
     
     var resultados = [];
     
     if (data.pdfData && data.pdfName) {
       var pdfBlob = Utilities.newBlob(Utilities.base64Decode(data.pdfData), 'application/pdf', data.pdfName);
-      var pdfFile = folder.createFile(pdfBlob);
+      var pdfFile = targetFolder.createFile(pdfBlob);
       resultados.push("PDF salvo: " + pdfFile.getName());
     }
     
@@ -359,13 +375,13 @@ const GOOGLE_APPS_SCRIPT_TEMPLATE = `function doPost(e) {
         'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet', 
         data.excelName
       );
-      var excelFile = folder.createFile(excelBlob);
+      var excelFile = targetFolder.createFile(excelBlob);
       resultados.push("XLSX salvo: " + excelFile.getName());
     }
     
     return ContentService.createTextOutput(JSON.stringify({
       status: 'success', 
-      message: 'Relatórios salvos no Google Drive!',
+      message: 'Relatórios salvos no Google Drive na pasta de ' + supervisorName + '!',
       details: resultados
     })).setMimeType(ContentService.MimeType.JSON);
     
