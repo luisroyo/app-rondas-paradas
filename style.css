@@ -149,3 +149,15 @@ body.dark-mode #instrucoes-script { background: #1a1a1a; }
 body.dark-mode #campos-nuvem { background: rgba(255, 255, 255, 0.02); }
 #instrucoes-script a { text-decoration: underline; }
 
+/* Cartões com Alerta de Duração */
+.card-foto.card-alerta-excedido {
+    border-top: 4px solid #ea4335 !important;
+    box-shadow: 0 0 10px rgba(234, 67, 53, 0.4);
+    background: #fffcfc;
+}
+body.dark-mode .card-foto.card-alerta-excedido {
+    background: #251818;
+    border-top: 4px solid #ea4335 !important;
+    box-shadow: 0 0 10px rgba(234, 67, 53, 0.3);
+}
+

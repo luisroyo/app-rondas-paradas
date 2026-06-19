@@ -6,6 +6,15 @@ function gerarPDF() {
         alert("Adicione fotografias para gerar o relatório."); return;
     }
 
+    // Verificar se há alertas de duração pendentes
+    const alertas = verificarAlertasDuracao(modoAtual);
+    if (alertas.length > 0) {
+        const listaAlertas = alertas.map(a => `• ${a.condominio}: ${a.tempo} (${a.agente})`).join('\n');
+        if (!confirm(`⚠️ ATENÇÃO: Existem rondas/paradas com duração superior a 30 minutos não confirmadas:\n\n${listaAlertas}\n\nDeseja gerar o relatório em PDF mesmo assim?`)) {
+            return;
+        }
+    }
+
     const supervisor = document.getElementById('supervisor').value || "Não informado";
     const turno = document.getElementById('turno').value;
     if (!window.jspdf) { alert("A biblioteca jsPDF não foi carregada corretamente."); return; }

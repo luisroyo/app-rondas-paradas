@@ -114,3 +114,46 @@ function validarLogica(modo, cond, faseStr, ignoreId, agenteVal, horarioVal) {
     }
     return true;
 }
+
+function verificarAlertasDuracao(modo) {
+    const registrosModo = registros.filter(r => r.modo === modo);
+    const condsParaCalc = {};
+    registrosModo.forEach(r => {
+        if (!condsParaCalc[r.condominio]) condsParaCalc[r.condominio] = [];
+        condsParaCalc[r.condominio].push(r);
+    });
+    
+    let alertasNaoConfirmados = [];
+    
+    Object.keys(condsParaCalc).forEach(cond => {
+        let regs = [...condsParaCalc[cond]].sort((a,b) => obterValorTempo(a.horario) - obterValorTempo(b.horario));
+        
+        const regsPorAgente = {};
+        regs.forEach(r => {
+            const agKey = normalizarAgente(r.agente);
+            if (!regsPorAgente[agKey]) regsPorAgente[agKey] = [];
+            regsPorAgente[agKey].push(r);
+        });
+
+        Object.values(regsPorAgente).forEach(agentRegs => {
+            let inicio = null;
+            for (let reg of agentRegs) {
+                if (reg.fase.startsWith('Início')) {
+                    inicio = reg;
+                } else if (reg.fase.startsWith('Término') && inicio) {
+                    let dur = calcularDuracaoMinutos(inicio.horario, reg.horario);
+                    if (dur > 30 && reg.alertaConfirmado !== true) {
+                        alertasNaoConfirmados.push({
+                            condominio: cond,
+                            agente: reg.agente,
+                            tempo: formatarTempo(dur)
+                        });
+                    }
+                    inicio = null;
+                }
+            }
+        });
+    });
+    
+    return alertasNaoConfirmados;
+}

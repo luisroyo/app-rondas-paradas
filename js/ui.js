@@ -128,6 +128,7 @@ function salvarEdicao() {
     obj.agente = ag;
     obj.fase = fase;
     obj.horario = hor;
+    obj.alertaConfirmado = false;
 
     fecharModalEdicao();
     atualizarTela();
@@ -281,7 +282,7 @@ function atualizarTela() {
                     inicio = reg;
                 } else if (reg.fase.startsWith('Término') && inicio) {
                     let dur = calcularDuracaoMinutos(inicio.horario, reg.horario);
-                    duracoesCard[reg.id] = formatarTempo(dur);
+                    duracoesCard[reg.id] = { texto: formatarTempo(dur), minutos: dur, excedido: dur > 30 };
                     inicio = null;
                 }
             }
@@ -292,12 +293,29 @@ function atualizarTela() {
     regsOrdenados.forEach(reg => {
         let classeFase = reg.fase.startsWith('Início') ? 'inicio' : 'termino';
         let extraInfo = "";
+        let classeAlerta = "";
         if (classeFase === 'termino' && duracoesCard[reg.id]) {
-            extraInfo = `<p style="color: var(--cor-principal); font-size: 11px; margin-top:2px;">⏱️ Duração: <strong>${duracoesCard[reg.id]}</strong></p>`;
+            const infoDur = duracoesCard[reg.id];
+            if (infoDur.excedido) {
+                const confirmado = reg.alertaConfirmado === true;
+                if (!confirmado) {
+                    classeAlerta = "card-alerta-excedido";
+                    extraInfo = `
+                        <div class="alerta-duracao" style="background: rgba(234, 67, 53, 0.1); color: #ea4335; border: 1px solid rgba(234, 67, 53, 0.3); border-radius: 4px; padding: 6px; margin-top: 8px; font-size: 11px; font-weight: bold; text-align: left; display: flex; flex-direction: column; gap: 4px;">
+                            <span>⚠️ Duração Alta: ${infoDur.texto}</span>
+                            <button onclick="confirmarAlertaDuracao(${reg.id})" style="background: #ea4335; color: white; border: none; border-radius: 3px; padding: 3px 6px; font-size: 10px; cursor: pointer; font-weight: bold; width: fit-content; margin-top: 2px;">Confirmar</button>
+                        </div>
+                    `;
+                } else {
+                    extraInfo = `<p style="color: #666; font-size: 11px; margin-top:2px;">⏱️ Duração: <strong>${infoDur.texto}</strong> <span style="color: #0f9d58;">(✓ Confirmado)</span></p>`;
+                }
+            } else {
+                extraInfo = `<p style="color: var(--cor-principal); font-size: 11px; margin-top:2px;">⏱️ Duração: <strong>${infoDur.texto}</strong></p>`;
+            }
         }
         
         htmlRenderizado += `
-            <div class="card-foto ${classeFase}">
+            <div class="card-foto ${classeFase} ${classeAlerta}">
                 <button class="btn-editar" onclick="abrirModalEdicao(${reg.id})" title="Editar">✏️</button>
                 <button class="btn-remover" onclick="removerFoto(${reg.id})" title="Remover">X</button>
                 <span class="badge-condominio">📌 ${reg.condominio}</span>
@@ -437,5 +455,14 @@ function salvarConfiguracoes() {
     
     fecharModalConfig();
     mostrarAvisoSalvo("⚙️ Configurações salvas!");
+}
+
+function confirmarAlertaDuracao(id) {
+    const obj = registros.find(r => r.id === id);
+    if (obj) {
+        obj.alertaConfirmado = true;
+        atualizarTela();
+        salvarDadosOffline();
+    }
 }
 
