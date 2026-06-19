@@ -6,6 +6,16 @@ function gerarPDF() {
         alert("Adicione fotografias para gerar o relatório."); return;
     }
 
+    // Verificar se há rondas ou paradas em aberto (iniciadas e não finalizadas)
+    const registrosAbertos = obterRegistrosAbertos(modoAtual);
+    if (registrosAbertos.length > 0) {
+        const termoFase = modoAtual === 'ronda' ? 'rondas' : 'paradas';
+        const listaAbertos = registrosAbertos.map(a => `• ${a.condominio}: Iniciado às ${a.horario} por ${a.agente}`).join('\n');
+        if (!confirm(`⚠️ ATENÇÃO: Existem ${termoFase} em aberto (sem registro de término):\n\n${listaAbertos}\n\nDeseja gerar o relatório em PDF mesmo assim?`)) {
+            return;
+        }
+    }
+
     // Verificar se há alertas de duração pendentes
     const alertas = verificarAlertasDuracao(modoAtual);
     if (alertas.length > 0) {

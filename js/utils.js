@@ -157,3 +157,46 @@ function verificarAlertasDuracao(modo) {
     
     return alertasNaoConfirmados;
 }
+
+function obterRegistrosAbertos(modo) {
+    const registrosModo = registros.filter(r => r.modo === modo);
+    const condsParaCalc = {};
+    registrosModo.forEach(r => {
+        if (!condsParaCalc[r.condominio]) condsParaCalc[r.condominio] = [];
+        condsParaCalc[r.condominio].push(r);
+    });
+    
+    let abertos = [];
+    
+    Object.keys(condsParaCalc).sort().forEach(cond => {
+        let regs = [...condsParaCalc[cond]].sort((a,b) => obterValorTempo(a.horario) - obterValorTempo(b.horario));
+        
+        const regsPorAgente = {};
+        regs.forEach(r => {
+            const agKey = normalizarAgente(r.agente);
+            if (!regsPorAgente[agKey]) regsPorAgente[agKey] = [];
+            regsPorAgente[agKey].push(r);
+        });
+
+        Object.values(regsPorAgente).forEach(agentRegs => {
+            let inicio = null;
+            for (let reg of agentRegs) {
+                if (reg.fase.startsWith('Início')) {
+                    inicio = reg;
+                } else if (reg.fase.startsWith('Término') && inicio) {
+                    inicio = null;
+                }
+            }
+            if (inicio) {
+                abertos.push({
+                    condominio: cond,
+                    agente: inicio.agente,
+                    horario: inicio.horario,
+                    fase: inicio.fase
+                });
+            }
+        });
+    });
+    
+    return abertos;
+}
