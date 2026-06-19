@@ -201,8 +201,8 @@ function gerarPDF() {
     doc.text("Assinatura do Supervisor", 60, y + 5, null, null, "center");
     doc.text(`Assinatura da Central`, 150, y + 5, null, null, "center");
 
-    const prefixo = modoAtual === 'ronda' ? 'Rondas' : 'Paradas';
-    doc.save(`Relatorio_${prefixo}_${turno.split(' ')[0]}_${dataHoje.replace(/\//g, '-')}.pdf`);
+    const supervisorNomeLimpo = supervisor.trim().replace(/\s+/g, '_');
+    doc.save(`Relatorio_${supervisorNomeLimpo}_${modoAtual}_${dataHoje.replace(/\//g, '-')}.pdf`);
 
     // Integração silenciosa com a nuvem (Google Drive)
     const nuvemAtiva = localStorage.getItem('nuvem_ativa') === 'true';
