@@ -80,36 +80,52 @@ function validarLogica(modo, cond, faseStr, ignoreId, agenteVal, horarioVal) {
     const agenteNorm = normalizarAgente(agenteVal);
     const timeVal = obterValorTempo(horarioVal);
 
-    // Filtrar apenas registros do mesmo agente, condomínio e modo
-    let regs = registros.filter(r => 
+    // 1. Filtrar registros do mesmo condomínio e modo (independente do agente)
+    let regsCond = registros.filter(r => 
         r.modo === modo && 
         r.condominio === cond && 
-        r.id !== ignoreId && 
-        normalizarAgente(r.agente) === agenteNorm
+        r.id !== ignoreId
     );
 
     // Filtrar registros com horário anterior ou igual ao do lançamento atual
-    let priorRegs = regs.filter(r => obterValorTempo(r.horario) <= timeVal);
+    let priorRegsCond = regsCond.filter(r => obterValorTempo(r.horario) <= timeVal);
 
     // Ordenar os registros anteriores por horário cronologicamente
-    priorRegs.sort((a, b) => {
+    priorRegsCond.sort((a, b) => {
         let ta = obterValorTempo(a.horario);
         let tb = obterValorTempo(b.horario);
         if (ta !== tb) return ta - tb;
         return a.id - b.id;
     });
 
-    const ultimoReg = priorRegs[priorRegs.length - 1];
-    const temInicioAberto = ultimoReg && ultimoReg.fase.startsWith('Início');
+    // 2. Filtrar apenas os registros que pertencem ao agente atual (usando compatibilidade ou nome normalizado)
+    let priorRegsAgente = priorRegsCond.filter(r => 
+        normalizarAgente(r.agente) === agenteNorm || agentesSaoCompativeis(r.agente, agenteVal)
+    );
+
+    const ultimoRegAgente = priorRegsAgente[priorRegsAgente.length - 1];
+    const temInicioAbertoAgente = ultimoRegAgente && ultimoRegAgente.fase.startsWith('Início');
+
+    const labelModo = modo === 'ronda' ? 'Ronda' : 'Parada';
 
     if (faseStr.startsWith('Início')) {
-        if (temInicioAberto) {
-            return confirm(`Atenção: O agente "${agenteVal}" já possui um Início aberto às ${ultimoReg.horario} para ${cond}.\n\nDeseja lançar este novo Início mesmo assim (ex: caso tenha esquecido de registrar o término do anterior)?`);
+        if (temInicioAbertoAgente) {
+            return confirm(`⚠️ ATENÇÃO: O agente "${agenteVal}" já possui um Início aberto às ${ultimoRegAgente.horario} para o residencial ${cond}.\n\nDeseja lançar este novo Início mesmo assim (ex: caso tenha esquecido de registrar o término do anterior)?`);
+        }
+        
+        // Se outro agente tem início aberto no residencial
+        const inicioAbertoGeral = obterInicioAbertoGeral(priorRegsCond);
+        if (inicioAbertoGeral) {
+            return confirm(`⚠️ ATENÇÃO: O residencial ${cond} já possui um Início aberto às ${inicioAbertoGeral.horario} pelo agente "${inicioAbertoGeral.agente}".\n\nDeseja registrar outro Início de ${labelModo} concorrente/paralelo neste mesmo residencial?`);
         }
     } else if (faseStr.startsWith('Término')) {
-        if (!temInicioAberto) {
-            const horaMsg = ultimoReg ? ` após as ${ultimoReg.horario}` : "";
-            return confirm(`Atenção: Não há nenhum Início aberto para o agente "${agenteVal}" em ${cond}${horaMsg}.\n\nDeseja lançar este Término mesmo assim?`);
+        if (!temInicioAbertoAgente) {
+            const inicioAbertoGeral = obterInicioAbertoGeral(priorRegsCond);
+            if (inicioAbertoGeral) {
+                return confirm(`⚠️ ATENÇÃO: Não há registro de Início para "${agenteVal}", mas existe um Início aberto às ${inicioAbertoGeral.horario} por "${inicioAbertoGeral.agente}".\n\nDeseja registrar este Término vinculando a essa ${labelModo} em aberto?`);
+            } else {
+                return confirm(`⚠️ ATENÇÃO: Não existe nenhum Início aberto para o residencial ${cond}.\n\nDeseja registrar este Término mesmo assim?`);
+            }
         }
     }
     return true;
@@ -128,14 +144,9 @@ function verificarAlertasDuracao(modo) {
     Object.keys(condsParaCalc).forEach(cond => {
         let regs = [...condsParaCalc[cond]].sort((a,b) => obterValorTempo(a.horario) - obterValorTempo(b.horario));
         
-        const regsPorAgente = {};
-        regs.forEach(r => {
-            const agKey = normalizarAgente(r.agente);
-            if (!regsPorAgente[agKey]) regsPorAgente[agKey] = [];
-            regsPorAgente[agKey].push(r);
-        });
-
-        Object.values(regsPorAgente).forEach(agentRegs => {
+        const gruposAgentes = agruparPorAgenteCompativel(regs);
+        
+        gruposAgentes.forEach(agentRegs => {
             let inicio = null;
             for (let reg of agentRegs) {
                 if (reg.fase.startsWith('Início')) {
@@ -171,14 +182,9 @@ function obterRegistrosAbertos(modo) {
     Object.keys(condsParaCalc).sort().forEach(cond => {
         let regs = [...condsParaCalc[cond]].sort((a,b) => obterValorTempo(a.horario) - obterValorTempo(b.horario));
         
-        const regsPorAgente = {};
-        regs.forEach(r => {
-            const agKey = normalizarAgente(r.agente);
-            if (!regsPorAgente[agKey]) regsPorAgente[agKey] = [];
-            regsPorAgente[agKey].push(r);
-        });
+        const gruposAgentes = agruparPorAgenteCompativel(regs);
 
-        Object.values(regsPorAgente).forEach(agentRegs => {
+        gruposAgentes.forEach(agentRegs => {
             let inicio = null;
             for (let reg of agentRegs) {
                 if (reg.fase.startsWith('Início')) {
@@ -200,3 +206,86 @@ function obterRegistrosAbertos(modo) {
     
     return abertos;
 }
+
+function obterNomeMesAno(date) {
+    const meses = [
+        "Janeiro", "Fevereiro", "Março", "Abril", "Maio", "Junho",
+        "Julho", "Agosto", "Setembro", "Outubro", "Novembro", "Dezembro"
+    ];
+    return `${meses[date.getMonth()]} - ${date.getFullYear()}`;
+}
+
+function agentesSaoCompativeis(ag1, ag2) {
+    if (!ag1 || !ag2) return false;
+    
+    const limpar = (a) => a.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/[^a-z0-9\s]/g, " ");
+    
+    const extrairPalavrasSignificativas = (texto) => {
+        return limpar(texto)
+            .split(/\s+/)
+            .filter(w => w.length >= 3 && 
+                         w !== "vtr" && 
+                         w !== "condutor" && 
+                         w !== "condutora" && 
+                         w !== "setor" && 
+                         w !== "ronda" && 
+                         w !== "parada" && 
+                         w !== "viatura");
+    };
+
+    const palavras1 = extrairPalavrasSignificativas(ag1);
+    const palavras2 = extrairPalavrasSignificativas(ag2);
+    
+    if (palavras1.length === 0 || palavras2.length === 0) {
+        return normalizarAgente(ag1) === normalizarAgente(ag2);
+    }
+    
+    for (let p1 of palavras1) {
+        if (palavras2.includes(p1)) {
+            return true;
+        }
+    }
+    return false;
+}
+
+function agruparPorAgenteCompativel(regs) {
+    const grupos = [];
+    
+    regs.forEach(r => {
+        let grupoEncontrado = grupos.find(g => 
+            g.some(reg => 
+                normalizarAgente(reg.agente) === normalizarAgente(r.agente) || 
+                agentesSaoCompativeis(reg.agente, r.agente)
+            )
+        );
+        
+        if (grupoEncontrado) {
+            grupoEncontrado.push(r);
+        } else {
+            grupos.push([r]);
+        }
+    });
+    
+    return grupos;
+}
+
+function obterInicioAbertoGeral(priorRegsCond) {
+    const iniciosAbertos = [];
+    
+    priorRegsCond.forEach(reg => {
+        if (reg.fase.startsWith('Início')) {
+            iniciosAbertos.push(reg);
+        } else if (reg.fase.startsWith('Término')) {
+            const idx = iniciosAbertos.findIndex(ini => 
+                normalizarAgente(ini.agente) === normalizarAgente(reg.agente) || 
+                agentesSaoCompativeis(ini.agente, reg.agente)
+            );
+            if (idx !== -1) {
+                iniciosAbertos.splice(idx, 1);
+            }
+        }
+    });
+    
+    return iniciosAbertos.length > 0 ? iniciosAbertos[0] : null;
+}
+

@@ -118,16 +118,11 @@ function criarPlanilhaModo(modo, registrosModo, supervisor, turno, dataHoje) {
         const regs = condsInfo[cond].sort((a, b) => obterValorTempo(a.horario) - obterValorTempo(b.horario));
 
         // Agrupar por agente para pareamento correto de rondas simultâneas
-        const regsPorAgente = {};
-        regs.forEach(r => {
-            const agKey = normalizarAgente(r.agente);
-            if (!regsPorAgente[agKey]) regsPorAgente[agKey] = [];
-            regsPorAgente[agKey].push(r);
-        });
+        const gruposAgentes = agruparPorAgenteCompativel(regs);
 
         // Calcular ciclos por agente
         let events = [];
-        Object.values(regsPorAgente).forEach(agentRegs => {
+        gruposAgentes.forEach(agentRegs => {
             let inicio = null;
             for (let reg of agentRegs) {
                 if (reg.fase.startsWith('Início')) {

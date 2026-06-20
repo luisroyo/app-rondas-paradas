@@ -63,17 +63,12 @@ function gerarPDF() {
         let regs = condsInfo[cond].sort((a,b) => obterValorTempo(a.horario) - obterValorTempo(b.horario));
         
         // Agrupar por agente para pareamento correto de rondas simultâneas
-        const regsPorAgente = {};
-        regs.forEach(r => {
-            const agKey = normalizarAgente(r.agente);
-            if (!regsPorAgente[agKey]) regsPorAgente[agKey] = [];
-            regsPorAgente[agKey].push(r);
-        });
+        const gruposAgentes = agruparPorAgenteCompativel(regs);
 
         let duracoes = [];
         let qtd = 0;
 
-        Object.values(regsPorAgente).forEach(agentRegs => {
+        gruposAgentes.forEach(agentRegs => {
             let inicio = null;
             for (let reg of agentRegs) {
                 if (reg.fase.startsWith('Início')) {
@@ -237,7 +232,9 @@ function gerarPDF() {
                 pdfData: pdfBase64,
                 excelName: excelNome,
                 excelData: excelBase64,
-                supervisor: supervisor
+                supervisor: supervisor,
+                dataRelatorio: dataHoje.replace(/\//g, '-'),
+                mesAno: obterNomeMesAno(dataRelatorio)
             };
             
             fetch(webhookUrl, {

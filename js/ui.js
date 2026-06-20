@@ -169,17 +169,12 @@ function atualizarResumo(registrosAtuais) {
         let regs = condsInfo[cond].sort((a,b) => obterValorTempo(a.horario) - obterValorTempo(b.horario));
         
         // Agrupar por agente para pareamento correto de rondas simultâneas
-        const regsPorAgente = {};
-        regs.forEach(r => {
-            const agKey = normalizarAgente(r.agente);
-            if (!regsPorAgente[agKey]) regsPorAgente[agKey] = [];
-            regsPorAgente[agKey].push(r);
-        });
+        const gruposAgentes = agruparPorAgenteCompativel(regs);
 
         let duracoes = [];
         let contagemInicios = 0;
 
-        Object.values(regsPorAgente).forEach(agentRegs => {
+        gruposAgentes.forEach(agentRegs => {
             let inicio = null;
             for (let reg of agentRegs) {
                 if (reg.fase.startsWith('Início')) {
@@ -268,14 +263,9 @@ function atualizarTela() {
         let regsOrdenadosPorCondominio = [...regs].sort((a,b) => obterValorTempo(a.horario) - obterValorTempo(b.horario));
         
         // Agrupar por agente para pareamento correto de rondas simultâneas
-        const regsPorAgente = {};
-        regsOrdenadosPorCondominio.forEach(r => {
-            const agKey = normalizarAgente(r.agente);
-            if (!regsPorAgente[agKey]) regsPorAgente[agKey] = [];
-            regsPorAgente[agKey].push(r);
-        });
+        const gruposAgentes = agruparPorAgenteCompativel(regsOrdenadosPorCondominio);
 
-        Object.values(regsPorAgente).forEach(agentRegs => {
+        gruposAgentes.forEach(agentRegs => {
             let inicio = null;
             for (let reg of agentRegs) {
                 if (reg.fase.startsWith('Início')) {
@@ -336,36 +326,41 @@ const GOOGLE_APPS_SCRIPT_TEMPLATE = `function doPost(e) {
   try {
     var data = JSON.parse(e.postData.contents);
     
-    // 1. Pasta principal
-    var mainFolderName = "Relatórios Rondas e Paradas";
-    var mainFolders = DriveApp.getFoldersByName(mainFolderName);
-    var mainFolder;
-    if (mainFolders.hasNext()) {
-      mainFolder = mainFolders.next();
-    } else {
-      mainFolder = DriveApp.createFolder(mainFolderName);
-    }
-    
-    // 2. Subpasta do Supervisor (caso esteja informado)
-    var targetFolder = mainFolder;
-    var supervisorName = data.supervisor ? data.supervisor.trim() : "Não Informado";
-    if (supervisorName) {
-      // Normaliza o nome do supervisor (primeira letra maiúscula)
-      supervisorName = supervisorName.charAt(0).toUpperCase() + supervisorName.slice(1);
-      
-      var subFolders = mainFolder.getFoldersByName(supervisorName);
-      if (subFolders.hasNext()) {
-        targetFolder = subFolders.next();
+    // Helper para buscar ou criar pasta
+    function obterOuCriarPasta(pai, nomePasta) {
+      var pastas = pai.getFoldersByName(nomePasta);
+      if (pastas.hasNext()) {
+        return pastas.next();
       } else {
-        targetFolder = mainFolder.createFolder(supervisorName);
+        return pai.createFolder(nomePasta);
       }
     }
+    
+    // 1. Pasta principal
+    var mainFolder = obterOuCriarPasta(DriveApp, "Relatórios de Rondas e Paradas");
+    
+    // 2. Subpasta do Supervisor
+    var supervisorName = data.supervisor ? data.supervisor.trim() : "Supervisor Não Informado";
+    if (supervisorName && supervisorName !== "Não informado") {
+      supervisorName = supervisorName.charAt(0).toUpperCase() + supervisorName.slice(1);
+    } else {
+      supervisorName = "Supervisor Não Informado";
+    }
+    var supervisorFolder = obterOuCriarPasta(mainFolder, supervisorName);
+    
+    // 3. Subpasta do Mês (Mês - Ano)
+    var mesAno = data.mesAno || "Mês Não Informado";
+    var mesFolder = obterOuCriarPasta(supervisorFolder, mesAno);
+    
+    // 4. Subpasta com a Data correspondente (Dia-Mês-Ano)
+    var dataRelatorio = data.dataRelatorio || "Data Não Informada";
+    var dataFolder = obterOuCriarPasta(mesFolder, dataRelatorio);
     
     var resultados = [];
     
     if (data.pdfData && data.pdfName) {
       var pdfBlob = Utilities.newBlob(Utilities.base64Decode(data.pdfData), 'application/pdf', data.pdfName);
-      var pdfFile = targetFolder.createFile(pdfBlob);
+      var pdfFile = dataFolder.createFile(pdfBlob);
       resultados.push("PDF salvo: " + pdfFile.getName());
     }
     
@@ -375,13 +370,13 @@ const GOOGLE_APPS_SCRIPT_TEMPLATE = `function doPost(e) {
         'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet', 
         data.excelName
       );
-      var excelFile = targetFolder.createFile(excelBlob);
+      var excelFile = dataFolder.createFile(excelBlob);
       resultados.push("XLSX salvo: " + excelFile.getName());
     }
     
     return ContentService.createTextOutput(JSON.stringify({
       status: 'success', 
-      message: 'Relatórios salvos no Google Drive na pasta de ' + supervisorName + '!',
+      message: 'Relatórios salvos com sucesso em: ' + supervisorName + ' > ' + mesAno + ' > ' + dataRelatorio,
       details: resultados
     })).setMimeType(ContentService.MimeType.JSON);
     
