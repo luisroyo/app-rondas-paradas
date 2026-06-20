@@ -210,8 +210,8 @@ function gerarPDF() {
     doc.save(`Relatorio_${supervisorNomeLimpo}_${modoAtual}_${dataHoje.replace(/\//g, '-')}.pdf`);
 
     // Integração silenciosa com a nuvem (Google Drive)
-    const nuvemAtiva = localStorage.getItem('nuvem_ativa') === 'true';
-    const webhookUrl = localStorage.getItem('webhook_url');
+    const nuvemAtiva = localStorage.getItem('nuvem_ativa') !== 'false';
+    const webhookUrl = localStorage.getItem('webhook_url') || DEFAULT_WEBHOOK_URL;
 
     if (nuvemAtiva && webhookUrl) {
         mostrarAvisoSalvo("☁️ Salvando no Google Drive...");

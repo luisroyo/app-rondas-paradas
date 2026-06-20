@@ -16,3 +16,5 @@ let modoAtual = 'ronda'; // 'ronda' ou 'parada'
 let modoOrdenacao = 'condominio';
 let registroRemovido = null;
 let timerToast = null;
+
+const DEFAULT_WEBHOOK_URL = "https://script.google.com/macros/s/AKfycbxkI4vZmqzXZ-e1OJoEUWUcKC8VF7CJDy0f73eCAyike8lW94BygYrSWKCYlvBNpzJTWw/exec";

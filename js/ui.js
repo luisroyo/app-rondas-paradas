@@ -395,8 +395,8 @@ function abrirModalConfig() {
     modal.style.display = 'flex';
     
     // Carregar valores atuais
-    const nuvemAtiva = localStorage.getItem('nuvem_ativa') === 'true';
-    const webhookUrl = localStorage.getItem('webhook_url') || '';
+    const nuvemAtiva = localStorage.getItem('nuvem_ativa') !== 'false';
+    const webhookUrl = localStorage.getItem('webhook_url') || DEFAULT_WEBHOOK_URL;
     
     document.getElementById('config-nuvem-ativa').checked = nuvemAtiva;
     document.getElementById('config-webhook-url').value = webhookUrl;
