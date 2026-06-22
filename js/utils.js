@@ -230,7 +230,9 @@ function agentesSaoCompativeis(ag1, ag2) {
                          w !== "setor" && 
                          w !== "ronda" && 
                          w !== "parada" && 
-                         w !== "viatura");
+                         w !== "viatura" &&
+                         w !== "condominio" &&
+                         w !== "residencial");
     };
 
     const palavras1 = extrairPalavrasSignificativas(ag1);
