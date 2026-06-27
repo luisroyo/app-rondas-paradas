@@ -4,6 +4,9 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Relatórios Operacionais - Rondas e Paradas</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
     <link rel="stylesheet" href="style.css">
@@ -119,7 +122,9 @@
                     <input type="text" id="filtro-busca" placeholder="Pesquisar Residencial..." onkeyup="atualizarTela()">
                 </div>
             </div>
-            <button id="btn-ordem" class="btn-acao btn-alternar" onclick="alternarOrdenacao()">Visualizando: Por Residencial 🔄</button>
+            <button id="btn-ordem" class="btn-alternar-moderno" onclick="alternarOrdenacao()" title="Alternar Visualização">
+                <span class="icone-ordem">🔄</span> <span class="texto-ordem">Por Residencial</span>
+            </button>
         </div>
         
         <div class="grid-fotos" id="grid-fotos"></div>

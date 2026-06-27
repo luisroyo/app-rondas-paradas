@@ -149,8 +149,9 @@ function limparFila() {
 
 function alternarOrdenacao() {
     modoOrdenacao = modoOrdenacao === 'condominio' ? 'horario' : 'condominio';
-    document.getElementById('btn-ordem').innerText = modoOrdenacao === 'condominio' 
-        ? 'Visualizando: Por Residencial 🔄' : 'Visualizando: Por Horário 🔄';
+    document.getElementById('btn-ordem').innerHTML = modoOrdenacao === 'condominio' 
+        ? '<span class="icone-ordem">🔄</span> <span class="texto-ordem">Por Residencial</span>' 
+        : '<span class="icone-ordem">🔄</span> <span class="texto-ordem">Por Horário</span>';
     atualizarTela();
 }
 
