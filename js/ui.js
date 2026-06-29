@@ -478,3 +478,26 @@ function confirmarAlertaDuracao(id) {
     }
 }
 
+function verificarPendencias() {
+    const registrosAbertos = obterRegistrosAbertos(modoAtual);
+    const alertas = verificarAlertasDuracao(modoAtual);
+    const termoFase = modoAtual === 'ronda' ? 'rondas' : 'paradas';
+    
+    let mensagens = [];
+    
+    if (registrosAbertos.length > 0) {
+        const listaAbertos = registrosAbertos.map(a => `• ${a.condominio}: Iniciado às ${a.horario} por ${a.agente}`).join('\n');
+        mensagens.push(`⚠️ Existem ${termoFase} em aberto (sem registro de término):\n${listaAbertos}`);
+    }
+    
+    if (alertas.length > 0) {
+        const listaAlertas = alertas.map(a => `• ${a.condominio}: ${a.tempo} (${a.agente})`).join('\n');
+        mensagens.push(`⚠️ Existem ${termoFase} com duração superior a 30 minutos não confirmadas:\n${listaAlertas}`);
+    }
+    
+    if (mensagens.length > 0) {
+        alert(mensagens.join('\n\n'));
+    } else {
+        alert(`✅ Tudo certo! Não há pendências para as ${termoFase} atuais.`);
+    }
+}

@@ -100,6 +100,7 @@
             <input type="file" id="fotos-input" accept="image/*" multiple onchange="processarImagens(this.files)">
         </div>
 
+        <button class="btn-acao btn-verificar" style="background-color: #ff9800; color: white; margin-bottom: 5px;" onclick="verificarPendencias()">🔍 Verificar Pendências</button>
         <button class="btn-acao btn-pdf" onclick="gerarPDF()">Baixar Relatório em PDF</button>
         <div class="excel-buttons-row">
             <button class="btn-acao btn-excel" onclick="gerarExcel('ronda')">Excel Rondas</button>
