@@ -218,12 +218,19 @@ function obterNomeMesAno(date) {
 function agentesSaoCompativeis(ag1, ag2) {
     if (!ag1 || !ag2) return false;
     
+    // Check if the base name before a slash matches exactly after normalization
+    const baseAg1 = ag1.split('/')[0].trim();
+    const baseAg2 = ag2.split('/')[0].trim();
+    if (normalizarAgente(baseAg1) === normalizarAgente(baseAg2)) {
+        return true;
+    }
+    
     const limpar = (a) => a.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/[^a-z0-9\s]/g, " ");
     
     const extrairPalavrasSignificativas = (texto) => {
         return limpar(texto)
             .split(/\s+/)
-            .filter(w => w.length >= 3 && 
+            .filter(w => w.length >= 2 && 
                          w !== "vtr" && 
                          w !== "condutor" && 
                          w !== "condutora" && 
@@ -232,7 +239,9 @@ function agentesSaoCompativeis(ag1, ag2) {
                          w !== "parada" && 
                          w !== "viatura" &&
                          w !== "condominio" &&
-                         w !== "residencial");
+                         w !== "residencial" &&
+                         w !== "agente" &&
+                         w !== "apoio");
     };
 
     const palavras1 = extrairPalavrasSignificativas(ag1);
@@ -242,6 +251,8 @@ function agentesSaoCompativeis(ag1, ag2) {
         return normalizarAgente(ag1) === normalizarAgente(ag2);
     }
     
+    // Requer que exista pelo menos uma palavra significativa em comum
+    // que não seja apenas números comuns se houver nomes.
     for (let p1 of palavras1) {
         if (palavras2.includes(p1)) {
             return true;
