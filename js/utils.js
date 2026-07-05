@@ -231,7 +231,10 @@ function agentesSaoCompativeis(ag1, ag2) {
         return limpar(texto)
             .split(/\s+/)
             .filter(w => w.length >= 2 && 
+                         !/^\d+$/.test(w) && 
                          w !== "vtr" && 
+                         w !== "mt" && 
+                         w !== "moto" && 
                          w !== "condutor" && 
                          w !== "condutora" && 
                          w !== "setor" && 
