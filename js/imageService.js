@@ -74,7 +74,7 @@ function processarUmaImagem(src, nomeOriginal = 'imagem', dados = null) {
         try {
             const canvas = document.createElement('canvas');
             const ctx = canvas.getContext('2d');
-            const MAX_WIDTH = 500; 
+            const MAX_WIDTH = 400; 
             let width = img.width; 
             let height = img.height;
             if (width > MAX_WIDTH) { 
@@ -94,7 +94,7 @@ function processarUmaImagem(src, nomeOriginal = 'imagem', dados = null) {
             const isInicio = faseRegistro.startsWith('Início');
             ctx.fillText(`${isInicio ? '🟢' : '🔴'} ${faseRegistro} - ${condominio} às ${horario}`, 10, height - 10);
             
-            const fotoBase64 = canvas.toDataURL('image/jpeg', 0.6);
+            const fotoBase64 = canvas.toDataURL('image/jpeg', 0.5);
             
             registros.push({
                 id: Date.now() + Math.random(),

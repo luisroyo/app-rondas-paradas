@@ -30,7 +30,7 @@ function gerarPDF() {
     if (!window.jspdf) { alert("A biblioteca jsPDF não foi carregada corretamente."); return; }
 
     const { jsPDF } = window.jspdf;
-    const doc = new jsPDF();
+    const doc = new jsPDF({ compress: true });
     
     let dataRelatorio = new Date();
     if (turno.includes('Noturno') && dataRelatorio.getHours() < 12) {
