@@ -56,7 +56,7 @@ function normalizarAgente(agente) {
                  .replace(/\bcondominio\b/g, "")
                  .replace(/\bresidencial\b/g, "");
                  
-    s = s.replace(/\b\d{2}:\d{2}\b/g, "");
+    s = s.replace(/\b\d{2}[:;]\d{2}\b/g, "");
     s = s.replace(/\b\d{4}\b/g, ""); // Remove números de 4 dígitos (ex: horários sem dois-pontos)
     return s.replace(/[^a-z0-9]/g, "");
 }

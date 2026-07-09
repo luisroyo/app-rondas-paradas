@@ -85,9 +85,9 @@ function inserirDadosRapidos(texto) {
     const textoUpper = texto.toUpperCase();
     
     // 1. Horário (HH:MM)
-    const matchHora = texto.match(/\b(\d{2}:\d{2})\b/);
+    const matchHora = texto.match(/\b(\d{2}[:;]\d{2})\b/);
     if (matchHora) {
-        document.getElementById('horario').value = matchHora[1];
+        document.getElementById('horario').value = matchHora[1].replace(';', ':');
     }
     
     // 2. Condomínio
@@ -136,7 +136,7 @@ function inserirDadosRapidos(texto) {
         
         // Ignorar linhas com horários ou descrições de fase/ronda
         if (
-            /\b\d{2}:\d{2}\b/.test(linha) || 
+            /\b\d{2}[:;]\d{2}\b/.test(linha) || 
             linhaL.includes('inicio') || 
             linhaL.includes('início') || 
             linhaL.includes('inicial') || 
