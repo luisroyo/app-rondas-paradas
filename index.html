@@ -88,9 +88,23 @@
         <div class="form-group" style="background: rgba(128, 128, 128, 0.1); padding: 10px; border-radius: 8px; border: 1px dashed var(--cor-principal);">
             <label style="color: var(--cor-principal);">⚡ Preenchimento Automático (Cole o texto aqui):</label>
             <textarea id="texto-resumo" rows="4" placeholder="Ex: Mt-05&#10;Condutor Heber&#10;Residêncial Fribourg&#10;Inicio ronda 02:18" style="width: 100%; border-radius: 5px; border: 1px solid #ccc; padding: 8px; margin-top: 5px; resize: vertical; font-family: inherit; font-size: 13px; box-sizing: border-box; background: var(--cor-fundo); color: var(--cor-texto);"></textarea>
-            <div style="display:flex; justify-content:flex-end;">
-                <button type="button" class="btn-acao" onclick="document.getElementById('texto-resumo').value='';" style="padding: 5px 10px; font-size: 12px; margin-top: 5px; width: auto; background-color: #f44336;">Limpar Texto</button>
+            <div style="display:flex; justify-content:flex-end; gap: 5px;">
+                <button type="button" class="btn-acao" onclick="colarDoWhatsApp()" style="padding: 5px 10px; font-size: 12px; margin-top: 5px; width: auto; background-color: #2196F3; color: white;">📋 Colar Info</button>
+                <button type="button" class="btn-acao" onclick="document.getElementById('texto-resumo').value='';" style="padding: 5px 10px; font-size: 12px; margin-top: 5px; width: auto; background-color: #f44336; color: white;">Limpar Texto</button>
             </div>
+            <script>
+                async function colarDoWhatsApp() {
+                    try {
+                        const text = await navigator.clipboard.readText();
+                        const textarea = document.getElementById('texto-resumo');
+                        textarea.value = ''; // Apaga o que está na caixa
+                        textarea.value = text; // Cola o que veio
+                        textarea.dispatchEvent(new Event('input')); // Dispara o evento para preencher automaticamente
+                    } catch (err) {
+                        alert('Falha ao colar da área de transferência. Dê a permissão ou cole manualmente.');
+                    }
+                }
+            </script>
         </div>
 
         <label>Anexe as fotografias do WhatsApp:</label>
