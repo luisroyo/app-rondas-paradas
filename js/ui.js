@@ -398,9 +398,11 @@ function abrirModalConfig() {
     // Carregar valores atuais
     const nuvemAtiva = localStorage.getItem('nuvem_ativa') !== 'false';
     const webhookUrl = localStorage.getItem('webhook_url') || DEFAULT_WEBHOOK_URL;
+    const googleSheetsUrl = localStorage.getItem('google_sheets_webhook_url') || '';
     
     document.getElementById('config-nuvem-ativa').checked = nuvemAtiva;
     document.getElementById('config-webhook-url').value = webhookUrl;
+    document.getElementById('config-google-sheets-url').value = googleSheetsUrl;
     
     // Configurar o código de visualização do script
     const pre = document.getElementById('codigo-apps-script-exemplo');
@@ -456,6 +458,7 @@ function copiarCodigoScript() {
 function salvarConfiguracoes() {
     const ativa = document.getElementById('config-nuvem-ativa').checked;
     const url = document.getElementById('config-webhook-url').value.trim();
+    const sheetsUrl = document.getElementById('config-google-sheets-url').value.trim();
     
     if (ativa && !url) {
         alert("Por favor, informe a URL do Web App do Google Apps Script!");
@@ -464,6 +467,7 @@ function salvarConfiguracoes() {
     
     localStorage.setItem('nuvem_ativa', ativa ? 'true' : 'false');
     localStorage.setItem('webhook_url', url);
+    localStorage.setItem('google_sheets_webhook_url', sheetsUrl);
     
     fecharModalConfig();
     mostrarAvisoSalvo("⚙️ Configurações salvas!");
