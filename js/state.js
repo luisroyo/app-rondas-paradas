@@ -1,6 +1,6 @@
 // Configurações e Estado Central
 const CONDOMINIOS_RONDA = [
-    "Arosa", "Baden", "Basel", "Biel", "Davos", "Eco Vila Genebra", "Fribourg", "Glarus",
+    "Arosa", "Baden", "Basel", "Biel", "Davos", "Eco Vila Genebra", "Fribourg", "Geneve", "Glarus",
     "La Vie", "Lauerz", "Lenk", "Lugano", "Luzern", "St. Moritz", "Vevey", "Zermatt", "Zurich"
 ].sort();
 
