@@ -41,7 +41,10 @@ function calcularTotais(modo) {
 }
 
 async function enviarTotaisGoogle() {
-    const webhookUrl = localStorage.getItem('google_sheets_webhook_url');
+    let webhookUrl = localStorage.getItem('google_sheets_webhook_url');
+    if ((!webhookUrl || webhookUrl.trim() === '') && typeof GLOBAL_GOOGLE_SHEETS_URL !== 'undefined') {
+        webhookUrl = GLOBAL_GOOGLE_SHEETS_URL;
+    }
     if (!webhookUrl || !webhookUrl.trim()) {
         alert("Por favor, configure a URL do Webhook do Google Apps Script nas Configurações (⚙️) antes de enviar.");
         return;

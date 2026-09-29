@@ -70,6 +70,11 @@ function removerFoto(id) {
     if (!obj) return;
     registroRemovido = obj; 
     registros = registros.filter(r => r.id !== id);
+    
+    if (typeof deletarRegistroNuvem === 'function') {
+        deletarRegistroNuvem(id);
+    }
+    
     atualizarTela();
     salvarDadosOffline(); 
     mostrarToastDesfazer();
@@ -88,6 +93,9 @@ function mostrarToastDesfazer() {
 function desfazerRemocao() {
     if (registroRemovido) {
         registros.push(registroRemovido);
+        if (typeof salvarRegistroNuvem === 'function') {
+            salvarRegistroNuvem(registroRemovido);
+        }
         registroRemovido = null;
         document.getElementById('toast-desfazer').classList.remove('toast-visivel');
         atualizarTela();
@@ -130,6 +138,10 @@ function salvarEdicao() {
     obj.horario = hor;
     obj.alertaConfirmado = false;
 
+    if (typeof salvarRegistroNuvem === 'function') {
+        salvarRegistroNuvem(obj);
+    }
+
     fecharModalEdicao();
     atualizarTela();
     salvarDadosOffline();
@@ -141,7 +153,15 @@ function limparFila() {
     
     let confirmMsg = modoAtual === 'ronda' ? "Deseja apagar todas as fotos de RONDAS?" : "Deseja apagar todas as fotos de PARADAS?";
     if (confirm(confirmMsg)) {
+        
+        const idsRemovidos = registros.filter(r => r.modo === modoAtual).map(r => r.id);
+        
         registros = registros.filter(r => r.modo !== modoAtual);
+        
+        if (typeof deletarRegistroNuvem === 'function') {
+            idsRemovidos.forEach(id => deletarRegistroNuvem(id));
+        }
+        
         atualizarTela();
         salvarDadosOffline(); 
     }
@@ -397,12 +417,24 @@ function abrirModalConfig() {
     
     // Carregar valores atuais
     const nuvemAtiva = localStorage.getItem('nuvem_ativa') !== 'false';
-    const webhookUrl = localStorage.getItem('webhook_url') || DEFAULT_WEBHOOK_URL;
-    const googleSheetsUrl = localStorage.getItem('google_sheets_webhook_url') || '';
+    let webhookUrl = localStorage.getItem('webhook_url') || DEFAULT_WEBHOOK_URL;
+    let googleSheetsUrl = localStorage.getItem('google_sheets_webhook_url');
+    let firebaseConfigStr = localStorage.getItem('firebase_config');
+    
+    if ((!googleSheetsUrl || googleSheetsUrl === '') && typeof GLOBAL_GOOGLE_SHEETS_URL !== 'undefined') {
+        googleSheetsUrl = GLOBAL_GOOGLE_SHEETS_URL;
+    }
+    
+    if (!firebaseConfigStr && typeof GLOBAL_FIREBASE_CONFIG !== 'undefined' && GLOBAL_FIREBASE_CONFIG !== null) {
+        firebaseConfigStr = JSON.stringify(GLOBAL_FIREBASE_CONFIG, null, 2);
+    }
     
     document.getElementById('config-nuvem-ativa').checked = nuvemAtiva;
     document.getElementById('config-webhook-url').value = webhookUrl;
-    document.getElementById('config-google-sheets-url').value = googleSheetsUrl;
+    document.getElementById('config-google-sheets-url').value = googleSheetsUrl || '';
+    
+    const configFirebaseEl = document.getElementById('config-firebase-json');
+    if (configFirebaseEl) configFirebaseEl.value = firebaseConfigStr || '';
     
     // Configurar o código de visualização do script
     const pre = document.getElementById('codigo-apps-script-exemplo');
@@ -460,6 +492,9 @@ function salvarConfiguracoes() {
     const url = document.getElementById('config-webhook-url').value.trim();
     const sheetsUrl = document.getElementById('config-google-sheets-url').value.trim();
     
+    const firebaseJsonEl = document.getElementById('config-firebase-json');
+    const firebaseJson = firebaseJsonEl ? firebaseJsonEl.value.trim() : '';
+    
     if (ativa && !url) {
         alert("Por favor, informe a URL do Web App do Google Apps Script!");
         return;
@@ -468,6 +503,11 @@ function salvarConfiguracoes() {
     localStorage.setItem('nuvem_ativa', ativa ? 'true' : 'false');
     localStorage.setItem('webhook_url', url);
     localStorage.setItem('google_sheets_webhook_url', sheetsUrl);
+    localStorage.setItem('firebase_config', firebaseJson);
+    
+    if (firebaseJson !== '') {
+        inicializarFirebase();
+    }
     
     fecharModalConfig();
     mostrarAvisoSalvo("⚙️ Configurações salvas!");

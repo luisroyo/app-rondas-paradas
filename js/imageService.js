@@ -96,7 +96,7 @@ function processarUmaImagem(src, nomeOriginal = 'imagem', dados = null) {
             
             const fotoBase64 = canvas.toDataURL('image/jpeg', 0.5);
             
-            registros.push({
+            const novoRegistro = {
                 id: Date.now() + Math.random(),
                 modo: modoAtual,
                 condominio: condominio,
@@ -104,7 +104,13 @@ function processarUmaImagem(src, nomeOriginal = 'imagem', dados = null) {
                 fase: faseRegistro,
                 horario: horario,
                 foto: fotoBase64
-            });
+            };
+            
+            registros.push(novoRegistro);
+            
+            if (typeof salvarRegistroNuvem === 'function') {
+                salvarRegistroNuvem(novoRegistro);
+            }
             
             atualizarTela();
             salvarDadosOffline();

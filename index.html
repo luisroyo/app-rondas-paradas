@@ -9,6 +9,8 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.8.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore-compat.js"></script>
     <link rel="stylesheet" href="style.css">
 </head>
 <body class="tema-ronda">
@@ -28,6 +30,18 @@
                     <span class="slider round"></span>
                 </label>
                 <span class="icone-lua">🌙</span>
+            </div>
+        </div>
+
+        <div class="sessao-nuvem-container" style="background: rgba(33, 150, 243, 0.1); border: 1px solid rgba(33, 150, 243, 0.3); padding: 8px 12px; border-radius: 8px; display: flex; align-items: center; justify-content: space-between; margin-bottom: 15px; font-size: 13px;">
+            <div style="display: flex; align-items: center; gap: 8px;">
+                <span title="ID da Sessão Compartilhada">☁️ Sessão em Nuvem:</span>
+                <input type="text" id="input-sessao-id" placeholder="Ex: PLANTAO-28" style="padding: 4px 8px; border: 1px solid var(--cor-borda); border-radius: 4px; width: 120px; font-size: 12px; font-weight: bold; text-transform: uppercase;">
+            </div>
+            <div style="display: flex; gap: 5px;">
+                <button onclick="fazerUploadDadosLocaisParaNuvem()" title="Enviar dados desta máquina para a nuvem" style="padding: 4px 8px; border: 1px solid var(--cor-borda); border-radius: 4px; cursor: pointer; font-size: 12px; background: #ff9800; color: white;">⬆️ Subir Locais</button>
+                <button id="btn-conectar-sessao" onclick="conectarSessaoFirebase(document.getElementById('input-sessao-id').value.trim().toUpperCase())" style="padding: 4px 8px; border: 1px solid var(--cor-borda); border-radius: 4px; cursor: pointer; font-size: 12px; font-weight: bold;">Conectar</button>
+                <button onclick="desconectarSessao()" title="Desconectar" style="padding: 4px 8px; border: 1px solid var(--cor-borda); border-radius: 4px; cursor: pointer; font-size: 12px; background: transparent;">✖️</button>
             </div>
         </div>
 
@@ -229,6 +243,26 @@
             <button class="btn-acao" onclick="copiarCodigoScript()" style="padding: 6px 12px; font-size: 12px; width: auto; background-color: var(--cor-principal); margin-top: 5px;">Copiar Código</button>
         </div>
         
+        <hr style="border: 0; border-top: 1px solid var(--cor-borda); margin: 15px 0;">
+
+        <div class="form-group" style="margin-top: 15px;">
+            <label style="color: #2196F3; font-weight: bold;">☁️ Sincronização em Tempo Real (Firebase):</label>
+            <p style="font-size: 11px; color: var(--cor-texto-mutado); margin-bottom: 8px; line-height: 1.3;">
+                Isso fará o app sincronizar instantaneamente todas as fotos e registros com a nuvem (Firebase). 
+                Se um computador pifar, basta abrir o app em outro, colocar o mesmo <strong>ID de Sessão</strong> (acima no painel principal) e continuar.
+            </p>
+            <textarea id="config-firebase-json" placeholder='Cole aqui o objeto firebaseConfig inteiro...
+Exemplo:
+{
+  "apiKey": "AIzaSy...",
+  "authDomain": "app.firebaseapp.com",
+  "projectId": "meu-projeto",
+  "storageBucket": "meu-projeto.appspot.com",
+  "messagingSenderId": "123",
+  "appId": "1:123:web:abc"
+}' rows="6" style="width: 100%; border-radius: 5px; border: 1px solid #ccc; padding: 8px; margin-top: 5px; font-family: monospace; font-size: 11px; box-sizing: border-box; background: var(--cor-fundo); color: var(--cor-texto);"></textarea>
+        </div>
+        
         <div class="form-row" style="margin-top:25px; margin-bottom: 0;">
             <button class="btn-acao" style="background-color: var(--cor-principal);" onclick="salvarConfiguracoes()">Salvar Configurações</button>
             <button class="btn-acao" style="background-color: #666;" onclick="fecharModalConfig()">Fechar</button>
@@ -250,6 +284,7 @@
 <script src="js/pdfGenerator.js?v=4"></script>
 <script src="js/excelGenerator.js?v=4"></script>
 <script src="js/googleSheetsIntegration.js?v=1"></script>
+<script src="js/firebaseIntegration.js?v=1"></script>
 <script src="js/main.js?v=4"></script>
 </body>
 </html>
