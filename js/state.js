@@ -37,5 +37,5 @@ const GLOBAL_FIREBASE_CONFIG = {
 }; 
 
 // Nome da sessão padrão (se quiser que todas as máquinas conectem na mesma sessão automaticamente, ex: "SESSAO-UNICA")
-const GLOBAL_DEFAULT_SESSION = ""; 
+const GLOBAL_DEFAULT_SESSION = "SESSAO-GERAL"; 
 
