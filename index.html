@@ -28,20 +28,7 @@
                 <label class="switch" title="Ativar Modo Noturno">
                     <input type="checkbox" id="toggle-dark-mode" onchange="alternarModoNoturno()">
                     <span class="slider round"></span>
-                </label>
-                <span class="icone-lua">🌙</span>
-            </div>
-        </div>
-
-        <div class="sessao-nuvem-container" style="background: rgba(33, 150, 243, 0.1); border: 1px solid rgba(33, 150, 243, 0.3); padding: 8px 12px; border-radius: 8px; display: flex; align-items: center; justify-content: space-between; margin-bottom: 15px; font-size: 13px;">
-            <div style="display: flex; align-items: center; gap: 8px;">
-                <span title="ID da Sessão Compartilhada">☁️ Sessão em Nuvem:</span>
-                <input type="text" id="input-sessao-id" placeholder="Ex: PLANTAO-28" style="padding: 4px 8px; border: 1px solid var(--cor-borda); border-radius: 4px; width: 120px; font-size: 12px; font-weight: bold; text-transform: uppercase;">
-            </div>
-            <div style="display: flex; gap: 5px;">
-                <button onclick="fazerUploadDadosLocaisParaNuvem()" title="Enviar dados desta máquina para a nuvem" style="padding: 4px 8px; border: 1px solid var(--cor-borda); border-radius: 4px; cursor: pointer; font-size: 12px; background: #ff9800; color: white;">⬆️ Subir Locais</button>
-                <button id="btn-conectar-sessao" onclick="conectarSessaoFirebase(document.getElementById('input-sessao-id').value.trim().toUpperCase())" style="padding: 4px 8px; border: 1px solid var(--cor-borda); border-radius: 4px; cursor: pointer; font-size: 12px; font-weight: bold;">Conectar</button>
-                <button onclick="desconectarSessao()" title="Desconectar" style="padding: 4px 8px; border: 1px solid var(--cor-borda); border-radius: 4px; cursor: pointer; font-size: 12px; background: transparent;">✖️</button>
+                </label>                <span class="icone-lua">🌙</span>
             </div>
         </div>
 
@@ -261,6 +248,23 @@ Exemplo:
   "messagingSenderId": "123",
   "appId": "1:123:web:abc"
 }' rows="6" style="width: 100%; border-radius: 5px; border: 1px solid #ccc; padding: 8px; margin-top: 5px; font-family: monospace; font-size: 11px; box-sizing: border-box; background: var(--cor-fundo); color: var(--cor-texto);"></textarea>
+            
+            <div class="sessao-nuvem-container" style="background: var(--cor-fundo-area); border: 1px solid var(--cor-borda); padding: 12px; border-radius: 8px; display: flex; flex-direction: column; gap: 10px; margin-top: 15px; font-size: 13px;">
+                <div style="display: flex; align-items: center; justify-content: space-between;">
+                    <div style="display: flex; align-items: center; gap: 8px;">
+                        <span title="ID da Sessão Compartilhada" style="font-weight: bold;">☁️ Status da Sessão:</span>
+                        <input type="text" id="input-sessao-id" placeholder="Ex: PLANTAO-28" style="padding: 4px 8px; border: 1px solid var(--cor-borda); border-radius: 4px; width: 140px; font-size: 12px; font-weight: bold; text-transform: uppercase;">
+                    </div>
+                    <div style="display: flex; gap: 5px;">
+                        <button id="btn-conectar-sessao" onclick="conectarSessaoFirebase(document.getElementById('input-sessao-id').value.trim().toUpperCase())" style="padding: 4px 8px; border: 1px solid var(--cor-borda); border-radius: 4px; cursor: pointer; font-size: 12px; font-weight: bold;">Conectar</button>
+                        <button onclick="desconectarSessao()" title="Desconectar" style="padding: 4px 8px; border: 1px solid var(--cor-borda); border-radius: 4px; cursor: pointer; font-size: 12px; background: transparent;">✖️</button>
+                    </div>
+                </div>
+                <div style="text-align: right;">
+                    <button onclick="fazerUploadDadosLocaisParaNuvem()" title="Enviar dados desta máquina para a nuvem" style="padding: 4px 12px; border: 1px solid var(--cor-borda); border-radius: 4px; cursor: pointer; font-size: 11px; background: #ff9800; color: white;">⬆️ Subir Registros Locais para a Nuvem</button>
+                </div>
+            </div>
+
         </div>
         
         <div class="form-row" style="margin-top:25px; margin-bottom: 0;">
